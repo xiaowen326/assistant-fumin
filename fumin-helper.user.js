@@ -5,9 +5,9 @@
 // @description  富民催收系统悬浮工具面板 - 短信数据查询
 // @author       Coze Coding
 // @match        https://fmcs.fbank.com/*
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_xmlhttpRequest
+// @grant        _GM_setValue
+// @grant        _GM_getValue
+// @grant        _GM_xmlhttpRequest
 // @connect      fbank.com
 // @run-at       document-idle
 // ==/UserScript==
@@ -19,27 +19,28 @@
     window.__FM_VERSION = 'v20260714B';
 
     // == GM API 兼容层（支持 Tampermonkey 和 控制台直接运行）==
-    const GM_setValue = typeof GM_setValue !== 'undefined' ? GM_setValue : function(key, value) {
+    // 使用 _GM_ 前缀避免与 Tampermonkey 注入的全局变量冲突
+    var _GM_setValue = (typeof _GM_setValue !== 'undefined') ? _GM_setValue : function(key, value) {
         try { localStorage.setItem('__fm_' + key, JSON.stringify(value)); } catch(e) {}
     };
-    const GM_getValue = typeof GM_getValue !== 'undefined' ? GM_getValue : function(key, defaultValue) {
+    var _GM_getValue = (typeof _GM_getValue !== 'undefined') ? _GM_getValue : function(key, defaultValue) {
         try {
-            const v = localStorage.getItem('__fm_' + key);
+            var v = localStorage.getItem('__fm_' + key);
             return v !== null ? JSON.parse(v) : defaultValue;
         } catch(e) { return defaultValue; }
     };
-    const GM_xmlhttpRequest = typeof GM_xmlhttpRequest !== 'undefined' ? GM_xmlhttpRequest : function(details) {
+    var _GM_xmlhttpRequest = (typeof _GM_xmlhttpRequest !== 'undefined') ? _GM_xmlhttpRequest : function(details) {
         // 使用 fetch 作为 fallback
-        const method = details.method || 'GET';
-        const headers = details.headers || {};
+        var method = details.method || 'GET';
+        var headers = details.headers || {};
         fetch(details.url, {
             method: method,
             headers: headers,
             body: details.data,
             credentials: 'include'
-        }).then(response => response.text()).then(responseText => {
+        }).then(function(response) { return response.text(); }).then(function(responseText) {
             if (details.onload) details.onload({ status: 200, responseText: responseText });
-        }).catch(error => {
+        }).catch(function(error) {
             if (details.onerror) details.onerror(error);
         });
     };
@@ -334,7 +335,7 @@
     // 从 localStorage 获取 Token
     function getTokenFromStorage() {
         try {
-            return GM_getValue('fm_token', '');
+            return _GM_getValue('fm_token', '');
         } catch (e) {
             return '';
         }
@@ -343,7 +344,7 @@
     // 保存 Token
     function saveToken(token) {
         try {
-            GM_setValue('fm_token', token);
+            _GM_setValue('fm_token', token);
         } catch (e) {
             console.error('保存 Token 失败:', e);
         }
@@ -390,7 +391,7 @@
                 'token': TOKEN
             };
 
-            GM_xmlhttpRequest({
+            _GM_xmlhttpRequest({
                 method: method,
                 url: BASE_URL + url,
                 headers: headers,
@@ -1233,7 +1234,7 @@
         const defaultHash = 'e6e0612609d10998134e7ea41b8e5f0f9e5b5e5e5e5e5e5e5e5e5e5e5e5e5e5e';
 
         if (hash === defaultHash || password === '888888') {
-            GM_setValue('fm_password_verified', 'verified');
+            _GM_setValue('fm_password_verified', 'verified');
             return true;
         } else {
             createNotification('密码错误', 'error');
