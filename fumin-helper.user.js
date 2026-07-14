@@ -102,9 +102,9 @@
         document.body.appendChild(container);
 
         container.querySelector('.fm-progress-minimize').addEventListener('click', () => {
-            container.classList.add('hidden');
+            container.style.display = 'none';
             const indicator = document.querySelector('.fm-progress-indicator');
-            if (indicator) indicator.classList.remove('hidden');
+            if (indicator) indicator.style.display = 'block';
         });
 
         return {
@@ -115,8 +115,7 @@
                 container.querySelector('.fm-progress-percent').textContent = `${percent}%`;
             },
             complete: () => {
-                container.querySelector('.fm-progress-bar').classList.remove('bg-green-500');
-                container.querySelector('.fm-progress-bar').classList.add('bg-blue-500');
+                container.querySelector('.fm-progress-bar').style.background = '#3b82f6';
                 container.querySelector('.fm-progress-text').textContent = '完成';
             },
             element: container
@@ -126,12 +125,12 @@
     // 后台任务指示器
     function createProgressIndicator() {
         const indicator = document.createElement('div');
-        indicator.className = 'fm-progress-indicator fm-progress-indicator';
+        indicator.className = 'fm-progress-indicator';
         indicator.textContent = '任务进行中...';
         indicator.addEventListener('click', () => {
-            indicator.classList.add('hidden');
+            indicator.style.display = 'none';
             const container = document.querySelector('.fm-progress-container');
-            if (container) container.classList.remove('hidden');
+            if (container) container.style.display = 'block';
         });
         document.body.appendChild(indicator);
         return indicator;
@@ -139,45 +138,48 @@
 
     // 结果展示组件
     function displayResults(data, columns, title = '查询结果') {
-        const existing = document.querySelector('.fm-result-modal');
-        if (existing) existing.remove();
+        // 移除旧的结果窗口
+        const existingModal = document.querySelector('.fm-result-modal');
+        const existingOverlay = document.querySelector('.fm-result-overlay');
+        if (existingModal) existingModal.remove();
+        if (existingOverlay) existingOverlay.remove();
 
+        // 创建遮罩层
+        const overlay = document.createElement('div');
+        overlay.className = 'fm-result-overlay';
+
+        // 创建弹窗
         const modal = document.createElement('div');
         modal.className = 'fm-result-modal';
 
-        const modalContent = document.createElement('div');
-        modalContent.className = 'fm-modal-content';
-
         // 标题栏
         const header = document.createElement('div');
-        header.className = 'fm-modal-header';
+        header.className = 'fm-result-header';
         header.innerHTML = `
-            <h3 class="fm-text-white fm-font-semibold fm-text-lg">${title} (${data.length} 条)</h3>
-            <button class="fm-modal-close">&times;</button>
+            <h3 class="fm-result-title">${title} (${data.length} 条)</h3>
+            <button class="fm-result-close">&times;</button>
         `;
 
         // 工具栏
         const toolbar = document.createElement('div');
-        toolbar.className = 'fm-modal-toolbar';
+        toolbar.className = 'fm-result-toolbar';
         toolbar.innerHTML = `
-            <input type="text" class="fm-filter-input" placeholder="筛选...">
-            <button class="fm-copy-all-btn">复制全部</button>
+            <input type="text" class="fm-result-filter-input" placeholder="筛选...">
+            <button class="fm-result-btn fm-copy-all-btn">复制全部</button>
         `;
 
         // 表格容器
         const tableContainer = document.createElement('div');
-        tableContainer.className = 'fm-overflow-auto';
+        tableContainer.className = 'fm-result-content';
 
         const table = document.createElement('table');
         table.className = 'fm-result-table';
 
         // 表头
         const thead = document.createElement('thead');
-        thead.className = 'fm-table-thead';
         const headerRow = document.createElement('tr');
         columns.forEach(col => {
             const th = document.createElement('th');
-            th.className = 'fm-table-th';
             th.textContent = col.label;
             th.dataset.key = col.key;
             headerRow.appendChild(th);
@@ -187,7 +189,6 @@
 
         // 表体
         const tbody = document.createElement('tbody');
-        tbody.className = 'fm-divide-y';
 
         function renderTable(filterText = '') {
             tbody.innerHTML = '';
@@ -198,18 +199,15 @@
 
             filtered.forEach((row, idx) => {
                 const tr = document.createElement('tr');
-                tr.className = 'fm-table-row';
                 columns.forEach(col => {
                     const td = document.createElement('td');
-                    td.className = 'fm-table-td';
                     td.textContent = row[col.key] || '-';
                     tr.appendChild(td);
                 });
                 // 复制按钮列
                 const actionTd = document.createElement('td');
-                actionTd.className = 'fm-table-td-action';
                 const copyBtn = document.createElement('button');
-                copyBtn.className = 'fm-text-green-400 hover:text-green-300 fm-text-xs';
+                copyBtn.className = 'fm-copy-btn';
                 copyBtn.textContent = '复制';
                 copyBtn.addEventListener('click', () => {
                     const text = columns.map(col => `${col.label}: ${row[col.key] || '-'}`).join('\n');
@@ -226,23 +224,29 @@
         table.appendChild(tbody);
         tableContainer.appendChild(table);
 
-        modalContent.appendChild(header);
-        modalContent.appendChild(toolbar);
-        modalContent.appendChild(tableContainer);
-        modal.appendChild(modalContent);
+        modal.appendChild(header);
+        modal.appendChild(toolbar);
+        modal.appendChild(tableContainer);
+
+        // 添加到页面
+        document.body.appendChild(overlay);
         document.body.appendChild(modal);
 
         // 事件绑定
-        modal.querySelector('.fm-modal-close').addEventListener('click', () => modal.remove());
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
+        modal.querySelector('.fm-result-close').addEventListener('click', () => {
+            modal.remove();
+            overlay.remove();
+        });
+        overlay.addEventListener('click', () => {
+            modal.remove();
+            overlay.remove();
         });
 
-        modal.querySelector('.fm-filter-input').addEventListener('input', (e) => {
+        modal.querySelector('.fm-result-filter-input').addEventListener('input', (e) => {
             renderTable(e.target.value);
         });
 
-        modal.querySelector('.fm-copy-all').addEventListener('click', () => {
+        modal.querySelector('.fm-copy-all-btn').addEventListener('click', () => {
             const text = data.map(row => columns.map(col => row[col.key] || '-').join('\t')).join('\n');
             navigator.clipboard.writeText(text);
             createNotification(`已复制 ${data.length} 条数据`, 'success', 1500);
@@ -813,39 +817,150 @@
             .fm-modal-btn-primary:hover { background: #00C853 !important; }
             .fm-modal-btn-secondary { background: rgba(48, 54, 61, 0.6) !important; color: #E6EDF3 !important; }
             .fm-modal-btn-secondary:hover { background: rgba(72, 79, 88, 0.8) !important; }
+            .fm-result-overlay {
+                position: fixed !important;
+                top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+                background: rgba(0, 0, 0, 0.75) !important;
+                z-index: 9999994 !important;
+            }
             .fm-result-modal {
                 position: fixed !important;
                 top: 50% !important;
                 left: 50% !important;
                 transform: translate(-50%, -50%) !important;
-                background: rgba(22, 27, 34, 0.98) !important;
-                border: 1px solid rgba(48, 54, 61, 0.8) !important;
-                border-radius: 12px !important;
-                padding: 24px !important;
-                min-width: 600px !important;
+                background: #1a1a2e !important;
+                border: 1px solid rgba(0, 230, 118, 0.2) !important;
+                border-radius: 16px !important;
+                padding: 0 !important;
+                min-width: 700px !important;
                 max-width: 90vw !important;
-                max-height: 80vh !important;
-                overflow: auto !important;
+                max-height: 85vh !important;
+                overflow: hidden !important;
                 z-index: 9999995 !important;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: 0 0 40px rgba(0, 230, 118, 0.1), 0 20px 60px rgba(0, 0, 0, 0.6) !important;
             }
-            .fm-result-header { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 16px !important; padding-bottom: 12px !important; border-bottom: 1px solid rgba(48, 54, 61, 0.6) !important; }
-            .fm-result-title { font-size: 16px !important; font-weight: 600 !important; color: #E6EDF3 !important; }
-            .fm-result-close { width: 28px !important; height: 28px !important; display: flex !important; align-items: center !important; justify-content: center !important; background: rgba(48, 54, 61, 0.6) !important; border: none !important; border-radius: 6px !important; color: #E6EDF3 !important; cursor: pointer !important; font-size: 16px !important; }
-            .fm-result-close:hover { background: rgba(239, 68, 68, 0.6) !important; }
-            .fm-result-filters { display: flex !important; gap: 12px !important; margin-bottom: 16px !important; }
-            .fm-result-filter-input { flex: 1 !important; padding: 8px 12px !important; background: rgba(13, 17, 23, 0.8) !important; border: 1px solid rgba(48, 54, 61, 0.8) !important; border-radius: 6px !important; color: #E6EDF3 !important; font-size: 13px !important; outline: none !important; box-sizing: border-box !important; }
-            .fm-result-filter-input:focus { border-color: rgba(0, 230, 118, 0.5) !important; }
-            .fm-result-btn { padding: 8px 16px !important; background: rgba(0, 230, 118, 0.1) !important; border: 1px solid rgba(0, 230, 118, 0.3) !important; border-radius: 6px !important; color: #00E676 !important; font-size: 13px !important; cursor: pointer !important; transition: all 0.2s !important; }
-            .fm-result-btn:hover { background: rgba(0, 230, 118, 0.2) !important; }
+            .fm-result-header {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 20px 24px !important;
+                background: linear-gradient(135deg, rgba(0, 230, 118, 0.1) 0%, rgba(0, 200, 83, 0.05) 100%) !important;
+                border-bottom: 1px solid rgba(0, 230, 118, 0.2) !important;
+            }
+            .fm-result-title {
+                font-size: 18px !important;
+                font-weight: 600 !important;
+                color: #00E676 !important;
+                text-shadow: 0 0 10px rgba(0, 230, 118, 0.3) !important;
+            }
+            .fm-result-close {
+                width: 32px !important;
+                height: 32px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: rgba(239, 68, 68, 0.1) !important;
+                border: 1px solid rgba(239, 68, 68, 0.3) !important;
+                border-radius: 8px !important;
+                color: #ef4444 !important;
+                cursor: pointer !important;
+                font-size: 18px !important;
+                transition: all 0.2s !important;
+            }
+            .fm-result-close:hover { background: rgba(239, 68, 68, 0.2) !important; transform: scale(1.1) !important; }
+            .fm-result-toolbar {
+                display: flex !important;
+                gap: 12px !important;
+                padding: 16px 24px !important;
+                background: rgba(13, 17, 23, 0.5) !important;
+                border-bottom: 1px solid rgba(48, 54, 61, 0.6) !important;
+            }
+            .fm-result-filter-input {
+                flex: 1 !important;
+                padding: 10px 14px !important;
+                background: rgba(13, 17, 23, 0.8) !important;
+                border: 1px solid rgba(48, 54, 61, 0.8) !important;
+                border-radius: 8px !important;
+                color: #E6EDF3 !important;
+                font-size: 13px !important;
+                outline: none !important;
+                box-sizing: border-box !important;
+                transition: all 0.2s !important;
+            }
+            .fm-result-filter-input:focus { border-color: rgba(0, 230, 118, 0.5) !important; box-shadow: 0 0 0 2px rgba(0, 230, 118, 0.1) !important; }
+            .fm-result-btn {
+                padding: 10px 18px !important;
+                background: linear-gradient(135deg, #00E676 0%, #00C853 100%) !important;
+                border: none !important;
+                border-radius: 8px !important;
+                color: #000 !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+                transition: all 0.2s !important;
+                box-shadow: 0 2px 8px rgba(0, 230, 118, 0.3) !important;
+            }
+            .fm-result-btn:hover { transform: translateY(-1px) !important; box-shadow: 0 4px 12px rgba(0, 230, 118, 0.4) !important; }
+            .fm-result-content { padding: 0 !important; overflow: auto !important; max-height: 50vh !important; }
             .fm-result-table { width: 100% !important; border-collapse: collapse !important; font-size: 13px !important; }
-            .fm-result-table th { padding: 10px 12px !important; text-align: left !important; background: rgba(13, 17, 23, 0.8) !important; border-bottom: 1px solid rgba(48, 54, 61, 0.8) !important; color: #8B949E !important; font-weight: 600 !important; white-space: nowrap !important; }
-            .fm-result-table td { padding: 10px 12px !important; border-bottom: 1px solid rgba(48, 54, 61, 0.4) !important; color: #E6EDF3 !important; }
-            .fm-result-table tr:hover td { background: rgba(48, 54, 61, 0.3) !important; }
-            .fm-result-pagination { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-top: 16px !important; padding-top: 12px !important; border-top: 1px solid rgba(48, 54, 61, 0.6) !important; font-size: 13px !important; color: #8B949E !important; }
+            .fm-result-table thead { position: sticky !important; top: 0 !important; z-index: 1 !important; }
+            .fm-result-table th {
+                padding: 12px 16px !important;
+                text-align: left !important;
+                background: rgba(13, 17, 23, 0.95) !important;
+                border-bottom: 2px solid rgba(0, 230, 118, 0.3) !important;
+                color: #00E676 !important;
+                font-weight: 600 !important;
+                white-space: nowrap !important;
+                font-size: 12px !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+            }
+            .fm-result-table td {
+                padding: 12px 16px !important;
+                border-bottom: 1px solid rgba(48, 54, 61, 0.4) !important;
+                color: #E6EDF3 !important;
+                transition: all 0.2s !important;
+            }
+            .fm-result-table tbody tr:hover td {
+                background: rgba(0, 230, 118, 0.05) !important;
+            }
+            .fm-result-table .fm-copy-btn {
+                padding: 6px 12px !important;
+                background: rgba(0, 230, 118, 0.1) !important;
+                border: 1px solid rgba(0, 230, 118, 0.3) !important;
+                border-radius: 6px !important;
+                color: #00E676 !important;
+                font-size: 12px !important;
+                cursor: pointer !important;
+                transition: all 0.2s !important;
+            }
+            .fm-result-table .fm-copy-btn:hover {
+                background: rgba(0, 230, 118, 0.2) !important;
+                transform: scale(1.05) !important;
+            }
+            .fm-result-pagination {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 16px 24px !important;
+                background: rgba(13, 17, 23, 0.5) !important;
+                border-top: 1px solid rgba(48, 54, 61, 0.6) !important;
+                font-size: 13px !important;
+                color: #8B949E !important;
+            }
             .fm-result-pagination-btns { display: flex !important; gap: 8px !important; }
-            .fm-result-page-btn { padding: 6px 12px !important; background: rgba(48, 54, 61, 0.6) !important; border: 1px solid rgba(72, 79, 88, 0.4) !important; border-radius: 4px !important; color: #E6EDF3 !important; cursor: pointer !important; font-size: 12px !important; }
-            .fm-result-page-btn:hover:not(:disabled) { background: rgba(72, 79, 88, 0.8) !important; }
+            .fm-result-page-btn {
+                padding: 8px 14px !important;
+                background: rgba(48, 54, 61, 0.6) !important;
+                border: 1px solid rgba(72, 79, 88, 0.4) !important;
+                border-radius: 6px !important;
+                color: #E6EDF3 !important;
+                cursor: pointer !important;
+                font-size: 12px !important;
+                transition: all 0.2s !important;
+            }
+            .fm-result-page-btn:hover:not(:disabled) { background: rgba(72, 79, 88, 0.8) !important; border-color: rgba(0, 230, 118, 0.3) !important; }
             .fm-result-page-btn:disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
         `;
         document.head.appendChild(style);
