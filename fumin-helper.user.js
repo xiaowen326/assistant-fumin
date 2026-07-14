@@ -530,8 +530,8 @@
                 { key: '姓名', label: '联系人姓名' },
                 { key: '关系', label: '关系' },
                 { key: '手机号', label: '手机号' },
-                { key: '城市', label: '城市' },
-                { key: '案件ID', label: '案件ID' },
+                { key: '车牌号', label: '车牌号' },
+                { key: '逾期天数', label: '逾期天数' },
                 { key: '用户ID', label: '用户ID' }
             ], '短信数据查询结果');
 
