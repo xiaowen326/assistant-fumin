@@ -491,14 +491,13 @@
                         const contactResponse = await queryContactList(caseItem.id, caseItem.userId);
                         const contacts = contactResponse.result || [];
                         return contacts.map(contact => ({
-                            姓名: contact.realName || '-',
-                            关系: contact.relation || '-',
-                            手机号: contact.mobile || contact.encryptMobile || '-',
-                            城市: contact.city || '-',
-                            案件ID: caseItem.id,
-                            用户ID: caseItem.userId,
-                            客户姓名: caseItem.userRealName || '-',
-                            业务名称: caseItem.busiName || '-'
+                            '客户姓名': caseItem.userRealName || '-',
+                            '姓名': contact.realName || '-',
+                            '关系': contact.relation || '-',
+                            '手机号': contact.mobile || contact.encryptMobile || '-',
+                            '车牌号': (caseItem.vehicleMessages && caseItem.vehicleMessages[0] && caseItem.vehicleMessages[0].carNo) || '-',
+                            '逾期天数': caseItem.maxOverdueDays !== undefined ? caseItem.maxOverdueDays : '-',
+                            '用户ID': caseItem.userId
                         }));
                     } catch (e) {
                         console.error(`查询案件 ${caseItem.id} 联系人失败:`, e);
