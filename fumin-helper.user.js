@@ -272,7 +272,8 @@
     function showPrompt(title, placeholder = '', defaultValue = '') {
         return new Promise((resolve) => {
             const modal = document.createElement('div');
-            modal.className = 'fm-result-modal';
+            modal.className = 'fm-result-modal fm-prompt-modal';
+            modal.style.minWidth = '400px';
             modal.innerHTML = `
                 <div class="fm-prompt-content">
                     <h3 class="fm-text-white fm-font-semibold fm-text-lg fm-mb-4">${title}</h3>
@@ -884,8 +885,8 @@
                 border: 1px solid rgba(48, 54, 61, 0.8) !important;
                 border-radius: 12px !important;
                 padding: 24px !important;
-                min-width: 320px !important;
-                max-width: 480px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
                 box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
             }
             .fm-prompt-input {
