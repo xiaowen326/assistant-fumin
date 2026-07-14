@@ -289,9 +289,12 @@
     // 从 Cookie 获取 Token
     function getTokenFromCookie() {
         const cookies = document.cookie.split(';');
+        console.log('富民系统小助手 - 所有 Cookie:', document.cookie);
         for (let cookie of cookies) {
             const [name, value] = cookie.trim().split('=');
-            if (name === 'token' || name === 'TOKEN') {
+            // 尝试多种可能的 token 名称
+            if (name.toLowerCase().includes('token') || name === 'sid' || name === 'session' || name === 'auth') {
+                console.log('富民系统小助手 - 找到可能的 Token:', name, '=', value);
                 return value;
             }
         }
@@ -330,6 +333,9 @@
         if (token) {
             TOKEN = token;
             IS_TOKEN_VALID = true;
+            console.log('富民系统小助手 - Token 已自动获取');
+        } else {
+            console.log('富民系统小助手 - Token 未找到，请手动设置');
         }
         return token;
     }
@@ -1025,19 +1031,15 @@
 
         function updateTokenStatus() {
             if (TOKEN) {
-                tokenDot.classList.remove('bg-red-500');
-                tokenDot.classList.add('bg-green-500');
+                tokenDot.style.background = '#22c55e';
                 tokenDot.style.boxShadow = '0 0 8px rgba(34, 197, 94, 0.6)';
                 tokenText.textContent = 'Token 已设置';
-                tokenText.classList.remove('fm-text-gray-400');
-                tokenText.classList.add('text-green-400');
+                tokenText.style.color = '#4ade80';
             } else {
-                tokenDot.classList.remove('bg-green-500');
-                tokenDot.classList.add('bg-red-500');
+                tokenDot.style.background = '#ef4444';
                 tokenDot.style.boxShadow = 'none';
                 tokenText.textContent = 'Token 未设置';
-                tokenText.classList.remove('text-green-400');
-                tokenText.classList.add('fm-text-gray-400');
+                tokenText.style.color = '#9ca3af';
             }
         }
 
