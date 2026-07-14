@@ -1038,8 +1038,8 @@
                         <span>查询短信数据</span>
                     </button>
                     <button class="fm-btn-placeholder" disabled>
-                        <span>📋</span>
-                        <span>批量查询销售</span>
+                        <span>⚡</span>
+                        <span>批量实时扣款</span>
                         <span class="coming-soon">即将上线</span>
                     </button>
                     <button class="fm-btn-placeholder" disabled>
@@ -1059,7 +1059,7 @@
                     </button>
                     <button class="fm-btn-placeholder" disabled>
                         <span></span>
-                        <span>查询客户画像</span>
+                        <span>查询车辆信息</span>
                         <span class="coming-soon">即将上线</span>
                     </button>
                 </div>
