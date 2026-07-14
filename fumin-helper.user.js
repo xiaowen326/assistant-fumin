@@ -968,91 +968,112 @@
 
         // == 折叠功能 ==
         const content = panel.querySelector('.fm-panel-content');
-        const collapseBtn = panel.querySelector('.fm-btn-collapse');
+        const collapseBtn = panel.querySelector('#fm-btn-toggle');
         let isCollapsed = false;
 
-        collapseBtn.addEventListener('click', () => {
-            isCollapsed = !isCollapsed;
-            content.style.display = isCollapsed ? 'none' : 'block';
-            collapseBtn.textContent = isCollapsed ? '+' : '−';
-        });
+        if (collapseBtn) {
+            collapseBtn.addEventListener('click', () => {
+                isCollapsed = !isCollapsed;
+                content.style.display = isCollapsed ? 'none' : 'block';
+                collapseBtn.textContent = isCollapsed ? '+' : '−';
+            });
+        }
 
         // == 缩放功能 ==
         let zoomLevel = 100;
-        const zoomLevelDisplay = panel.querySelector('.fm-zoom-level');
-        const zoomInBtn = panel.querySelector('.fm-btn-zoom-in');
-        const zoomOutBtn = panel.querySelector('.fm-btn-zoom-out');
+        const zoomLevelDisplay = panel.querySelector('#fm-zoom-level');
+        const zoomInBtn = panel.querySelector('#fm-btn-zoom-in');
+        const zoomOutBtn = panel.querySelector('#fm-btn-zoom-out');
 
         function updateZoom() {
             panel.style.transform = `scale(${zoomLevel / 100})`;
             panel.style.transformOrigin = 'top right';
-            zoomLevelDisplay.textContent = `${zoomLevel}%`;
+            if (zoomLevelDisplay) zoomLevelDisplay.textContent = `${zoomLevel}%`;
         }
 
-        zoomInBtn.addEventListener('click', () => {
-            if (zoomLevel < 150) {
-                zoomLevel += 10;
-                updateZoom();
-            }
-        });
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                if (zoomLevel < 150) {
+                    zoomLevel += 10;
+                    updateZoom();
+                }
+            });
+        }
 
-        zoomOutBtn.addEventListener('click', () => {
-            if (zoomLevel > 50) {
-                zoomLevel -= 10;
-                updateZoom();
-            }
-        });
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', () => {
+                if (zoomLevel > 50) {
+                    zoomLevel -= 10;
+                    updateZoom();
+                }
+            });
+        }
 
         // == 精简模式（双击标题栏） ==
-        const compactIcon = panel.querySelector('.fm-compact-icon');
+        const compactIcon = panel.querySelector('#fm-compact-icon');
         let isCompact = false;
 
         header.addEventListener('dblclick', () => {
             isCompact = !isCompact;
             if (isCompact) {
                 panel.style.display = 'none';
-                compactIcon.classList.remove('hidden');
+                if (compactIcon) compactIcon.style.display = 'flex';
             } else {
                 panel.style.display = 'block';
-                compactIcon.classList.add('hidden');
+                if (compactIcon) compactIcon.style.display = 'none';
             }
         });
 
-        compactIcon.addEventListener('click', () => {
-            isCompact = false;
-            panel.style.display = 'block';
-            compactIcon.classList.add('hidden');
-        });
+        if (compactIcon) {
+            compactIcon.addEventListener('click', () => {
+                isCompact = false;
+                panel.style.display = 'block';
+                compactIcon.style.display = 'none';
+            });
+        }
 
         // == Token 设置 ==
-        const tokenDot = panel.querySelector('.fm-token-dot');
-        const tokenText = panel.querySelector('.fm-token-text');
-        const setTokenBtn = panel.querySelector('.fm-btn-set-token');
+        const tokenDot = panel.querySelector('#fm-token-dot');
+        const tokenText = panel.querySelector('#fm-token-text');
+        const setTokenBtn = panel.querySelector('#fm-btn-set-token');
 
         function updateTokenStatus() {
             if (TOKEN) {
-                tokenDot.style.background = '#22c55e';
-                tokenDot.style.boxShadow = '0 0 8px rgba(34, 197, 94, 0.6)';
-                tokenText.textContent = 'Token 已设置';
-                tokenText.style.color = '#4ade80';
+                if (tokenDot) {
+                    tokenDot.style.background = '#22c55e';
+                    tokenDot.style.boxShadow = '0 0 8px rgba(34, 197, 94, 0.6)';
+                }
+                if (tokenText) {
+                    tokenText.textContent = 'Token 已设置';
+                    tokenText.style.color = '#4ade80';
+                }
             } else {
-                tokenDot.style.background = '#ef4444';
-                tokenDot.style.boxShadow = 'none';
-                tokenText.textContent = 'Token 未设置';
-                tokenText.style.color = '#9ca3af';
+                if (tokenDot) {
+                    tokenDot.style.background = '#ef4444';
+                    tokenDot.style.boxShadow = 'none';
+                }
+                if (tokenText) {
+                    tokenText.textContent = 'Token 未设置';
+                    tokenText.style.color = '#9ca3af';
+                }
             }
         }
 
-        setTokenBtn.addEventListener('click', async () => {
-            const token = await showPrompt('设置 Token', '请输入 Token', TOKEN);
-            if (token !== null) {
-                setToken(token);
-                createNotification('Token 设置成功', 'success');
-            }
-        });
+        if (setTokenBtn) {
+            setTokenBtn.addEventListener('click', async () => {
+                const token = await showPrompt('设置 Token', '请输入 Token', TOKEN);
+                if (token !== null) {
+                    setToken(token);
+                    createNotification('Token 设置成功', 'success');
+                }
+            });
+        }
 
         // == 功能按钮事件 ==
-        panel.querySelector('.fm-btn-sms-data').addEventListener('click', querySmsData);
+        const smsDataBtn = panel.querySelector('#fm-btn-sms-data');
+        if (smsDataBtn) {
+            smsDataBtn.addEventListener('click', querySmsData);
+        }
 
         // 初始化 Token 状态
         updateTokenStatus();
