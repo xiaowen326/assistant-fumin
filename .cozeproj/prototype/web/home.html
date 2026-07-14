@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #00E676;
+      --color-primary-container:    #00C853;
+      --color-on-primary:           #000000;
+      /* === 背景 / 表面 === */
+      --color-background:                 #0D1117;
+      --color-surface-container-lowest:   #010409;
+      --color-surface:                    #161B22;
+      --color-surface-container:          #21262D;
+      --color-surface-container-high:     #30363D;
+      --color-surface-container-highest:  #484F58;
+      /* === 文字 === */
+      --color-on-surface:           #E6EDF3;
+      --color-on-surface-variant:   #8B949E;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #30363D;
+      --color-outline-variant:  #21262D;
+      /* === 圆角 === */
+      --radius-sm:   0.375rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.25rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.4);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.5), 0 0 15px rgba(0,230,118,0.15);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.6);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+
+  <style>
+    /* 面板拖拽光标 */
+    #panel-header { cursor: move; }
+    /* 功能按钮 hover 动效 */
+    .panel-btn { transition: all 0.2s ease; }
+    .panel-btn:hover { transform: translateY(-1px); filter: brightness(1.15); }
+    .panel-btn:active { transform: translateY(0); filter: brightness(0.95); }
+    /* 面板缩放过渡 */
+    #floating-panel { transition: transform 0.2s ease, width 0.2s ease; transform-origin: top left; }
+    /* 精简模式小图标 */
+    #mini-icon { transition: all 0.3s ease; }
+    /* 查询结果弹窗动画 */
+    #result-modal { transition: opacity 0.25s ease; }
+    /* 绿色辉光脉动 */
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 20px rgba(0,230,118,0.12); }
+      50% { box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 30px rgba(0,230,118,0.2); }
+    }
+    #floating-panel { animation: glow-pulse 3s ease-in-out infinite; }
+  </style>
+</head>
+
+<body class="bg-background text-on-surface font-sans min-h-screen relative overflow-hidden">
+
+  <!-- 背景模拟：富民系统页面 -->
+  <div class="absolute inset-0 bg-surface-container-lowest opacity-50"></div>
+  <!-- 模拟富民系统背景元素 -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-0 left-0 right-0 h-12 bg-surface-container-high/30 flex items-center px-6">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded bg-surface-container-highest/40"></div>
+        <div class="w-24 h-3 rounded bg-surface-container-highest/30"></div>
+        <div class="ml-8 flex gap-4">
+          <div class="w-16 h-3 rounded bg-surface-container-highest/20"></div>
+          <div class="w-16 h-3 rounded bg-surface-container-highest/20"></div>
+          <div class="w-16 h-3 rounded bg-surface-container-highest/20"></div>
+        </div>
+      </div>
+    </div>
+    <div class="absolute top-12 left-0 w-48 bottom-0 bg-surface-container/20 border-r border-outline/10"></div>
+  </div>
+  <!-- 水印文字 -->
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+    <div class="text-on-surface-variant/10 text-7xl font-bold select-none tracking-widest">富民催收系统</div>
+  </div>
+
+  <!-- @main-content:start -->
+  <main class="relative z-10 flex items-start justify-center min-h-screen p-8" style="padding-top: 120px;">
+
+    <!-- ====== 悬浮工具面板 ====== -->
+    <div id="floating-panel" class="w-80 bg-surface rounded-xl border border-outline/30 overflow-visible" style="box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 20px rgba(0,230,118,0.12);">
+
+      <!-- 标题栏（可拖拽区域） -->
+      <div id="panel-header" class="flex items-center justify-between px-4 py-3 bg-surface-container-high border-b border-outline/20 select-none">
+        <div class="flex items-center gap-2">
+          <i data-lucide="bot" class="w-4 h-4 text-primary"></i>
+          <span class="text-sm font-semibold text-on-surface tracking-wide">富民系统小助手</span>
+        </div>
+        <div class="flex items-center gap-0.5">
+          <!-- 缩放比例显示 -->
+          <span id="zoom-display" class="text-xs text-on-surface-variant/70 mr-1 font-mono">100%</span>
+          <!-- 缩小按钮 -->
+          <button id="btn-zoom-out" class="p-1 rounded hover:bg-surface-container-highest/50 text-on-surface-variant hover:text-on-surface transition-colors" title="缩小">
+            <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+          </button>
+          <!-- 放大按钮 -->
+          <button id="btn-zoom-in" class="p-1 rounded hover:bg-surface-container-highest/50 text-on-surface-variant hover:text-on-surface transition-colors" title="放大">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          </button>
+          <!-- 折叠按钮 -->
+          <button id="btn-collapse" class="p-1 rounded hover:bg-surface-container-highest/50 text-on-surface-variant hover:text-on-surface transition-colors" title="折叠/展开">
+            <i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 可折叠内容区 -->
+      <div id="panel-body">
+        <!-- Token 状态区 -->
+        <div id="token-status" class="px-4 py-2.5 flex items-center gap-2 border-b border-outline/10">
+          <div id="token-indicator" class="w-2 h-2 rounded-full bg-success" style="box-shadow: 0 0 6px rgba(34,197,94,0.5);"></div>
+          <span id="token-text" class="text-xs text-success font-medium">Token 已设置</span>
+          <span class="text-xs text-on-surface-variant/50 ml-auto">v1.2.0</span>
+        </div>
+
+        <!-- 功能按钮区 -->
+        <div id="btn-area" class="p-3 space-y-2">
+          <!-- 功能按钮1：查询短信数据（首期上线 - 绿色主题） -->
+          <button id="btn-sms-query" class="panel-btn w-full py-2.5 px-3 bg-primary/15 text-primary rounded-lg text-sm font-medium border border-primary/20 flex items-center gap-2">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            查询短信数据
+          </button>
+
+          <!-- 功能按钮2：批量查询销售（后续版本 - 蓝色） -->
+          <button id="btn-batch-sales" class="panel-btn w-full py-2.5 px-3 bg-blue-500/10 text-blue-400 rounded-lg text-sm font-medium border border-blue-500/20 flex items-center gap-2 opacity-70">
+            <i data-lucide="search" class="w-4 h-4"></i>
+            批量查询销售
+            <span class="ml-auto text-xs opacity-60">即将上线</span>
+          </button>
+
+          <!-- 功能按钮3：发送系统短信（后续版本 - 橙色） -->
+          <button id="btn-send-sms" class="panel-btn w-full py-2.5 px-3 bg-warning/10 text-warning rounded-lg text-sm font-medium border border-warning/20 flex items-center gap-2 opacity-70">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            发送系统短信
+            <span class="ml-auto text-xs opacity-60">即将上线</span>
+          </button>
+
+          <!-- 功能按钮4：查询还款状态（后续版本 - 紫色） -->
+          <button id="btn-repay-status" class="panel-btn w-full py-2.5 px-3 bg-purple-500/10 text-purple-400 rounded-lg text-sm font-medium border border-purple-500/20 flex items-center gap-2 opacity-70">
+            <i data-lucide="credit-card" class="w-4 h-4"></i>
+            查询还款状态
+            <span class="ml-auto text-xs opacity-60">即将上线</span>
+          </button>
+
+          <!-- 功能按钮5：批量添加催记（后续版本 - 青色） -->
+          <button id="btn-batch-remark" class="panel-btn w-full py-2.5 px-3 bg-cyan-500/10 text-cyan-400 rounded-lg text-sm font-medium border border-cyan-500/20 flex items-center gap-2 opacity-70">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+            批量添加催记
+            <span class="ml-auto text-xs opacity-60">即将上线</span>
+          </button>
+
+          <!-- 功能按钮6：查询客户画像（后续版本 - 粉色） -->
+          <button id="btn-customer-profile" class="panel-btn w-full py-2.5 px-3 bg-pink-500/10 text-pink-400 rounded-lg text-sm font-medium border border-pink-500/20 flex items-center gap-2 opacity-70">
+            <i data-lucide="user-circle" class="w-4 h-4"></i>
+            查询客户画像
+            <span class="ml-auto text-xs opacity-60">即将上线</span>
+          </button>
+        </div>
+
+        <!-- 底部名言区 -->
+        <div id="quote-area" class="px-4 py-3 border-t border-outline/10">
+          <p id="daily-quote" class="text-xs text-on-surface-variant/60 italic text-center leading-relaxed">"每一次沟通，都是信任的积累。"</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 精简模式小图标（默认隐藏） ====== -->
+    <div id="mini-icon" class="hidden fixed bottom-6 right-6 w-12 h-12 rounded-full bg-surface border border-primary/30 flex items-center justify-center cursor-pointer hover:border-primary/60 transition-colors" style="box-shadow: 0 0 15px rgba(0,230,118,0.2);" title="双击展开面板">
+      <i data-lucide="bot" class="w-5 h-5 text-primary"></i>
+    </div>
+
+    <!-- ====== 查询结果弹窗 ====== -->
+    <div id="result-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" style="backdrop-filter: blur(2px);">
+      <div id="result-dialog" class="bg-surface rounded-xl shadow-dialog w-full max-w-3xl max-h-[85vh] overflow-hidden border border-outline/20" style="box-shadow: 0 25px 50px rgba(0,0,0,0.6), 0 0 20px rgba(0,230,118,0.08);">
+
+        <!-- 弹窗标题栏 -->
+        <div class="flex items-center justify-between px-5 py-3.5 bg-surface-container-high border-b border-outline/20">
+          <div class="flex items-center gap-2">
+            <i data-lucide="message-square" class="w-4 h-4 text-primary"></i>
+            <span class="text-sm font-semibold text-on-surface">查询短信数据</span>
+            <span class="text-xs text-on-surface-variant/60 ml-2">案件ID: FM20240115001</span>
+          </div>
+          <button id="btn-close-modal" class="p-1 rounded hover:bg-surface-container-highest/50 text-on-surface-variant hover:text-on-surface transition-colors" title="关闭">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- 筛选区域 -->
+        <div class="px-5 py-3 border-b border-outline/10 flex items-center gap-3">
+          <div class="flex-1 relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-on-surface-variant/50 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="input-filter" class="w-full bg-surface-container border-none rounded-md pl-9 pr-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" placeholder="搜索姓名、手机号、案件ID..."/>
+          </div>
+          <button id="btn-refresh" class="px-3 py-2 bg-surface-container border-none rounded-md text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            刷新
+          </button>
+          <button id="btn-copy-all" class="px-3 py-2 bg-primary/15 border border-primary/20 rounded-md text-sm text-primary hover:bg-primary/25 transition-colors flex items-center gap-1.5">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            复制全部
+          </button>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="overflow-x-auto">
+          <div class="min-w-[700px]">
+            <!-- 表头 -->
+            <div class="grid grid-cols-7 px-5 py-2.5 bg-surface-container/80 text-xs font-semibold text-on-surface-variant uppercase tracking-wide border-b border-outline/10">
+              <span>姓名</span>
+              <span>关系</span>
+              <span>手机号</span>
+              <span>城市</span>
+              <span>案件ID</span>
+              <span>用户ID</span>
+              <span class="text-center">操作</span>
+            </div>
+            <!-- 表格内容 -->
+            <div id="table-body" class="divide-y divide-outline-variant/30">
+              <!-- 列表-短信数据1 -->
+              <div class="grid grid-cols-7 px-5 py-3 hover:bg-surface-container/40 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">张小美</span>
+                <span class="text-xs text-on-surface-variant"><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs">本人</span></span>
+                <span class="text-sm text-on-surface-variant font-mono">138****5678</span>
+                <span class="text-sm text-on-surface-variant">上海市</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">FM20240115001</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">U100234</span>
+                <div class="flex justify-center">
+                  <button class="btn-copy-row text-primary/70 hover:text-primary text-xs font-medium hover:underline transition-colors" data-row="1">复制</button>
+                </div>
+              </div>
+              <!-- 列表-短信数据2 -->
+              <div class="grid grid-cols-7 px-5 py-3 hover:bg-surface-container/40 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">张建国</span>
+                <span class="text-xs text-on-surface-variant"><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 text-xs">父亲</span></span>
+                <span class="text-sm text-on-surface-variant font-mono">139****1234</span>
+                <span class="text-sm text-on-surface-variant">上海市</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">FM20240115001</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">U100234</span>
+                <div class="flex justify-center">
+                  <button class="btn-copy-row text-primary/70 hover:text-primary text-xs font-medium hover:underline transition-colors" data-row="2">复制</button>
+                </div>
+              </div>
+              <!-- 列表-短信数据3 -->
+              <div class="grid grid-cols-7 px-5 py-3 hover:bg-surface-container/40 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">李秀英</span>
+                <span class="text-xs text-on-surface-variant"><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 text-xs">母亲</span></span>
+                <span class="text-sm text-on-surface-variant font-mono">137****9999</span>
+                <span class="text-sm text-on-surface-variant">上海市</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">FM20240115001</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">U100234</span>
+                <div class="flex justify-center">
+                  <button class="btn-copy-row text-primary/70 hover:text-primary text-xs font-medium hover:underline transition-colors" data-row="3">复制</button>
+                </div>
+              </div>
+              <!-- 列表-短信数据4 -->
+              <div class="grid grid-cols-7 px-5 py-3 hover:bg-surface-container/40 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">王大明</span>
+                <span class="text-xs text-on-surface-variant"><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-warning/10 text-warning text-xs">同事</span></span>
+                <span class="text-sm text-on-surface-variant font-mono">150****7890</span>
+                <span class="text-sm text-on-surface-variant">杭州市</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">FM20240115002</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">U100567</span>
+                <div class="flex justify-center">
+                  <button class="btn-copy-row text-primary/70 hover:text-primary text-xs font-medium hover:underline transition-colors" data-row="4">复制</button>
+                </div>
+              </div>
+              <!-- 列表-短信数据5 -->
+              <div class="grid grid-cols-7 px-5 py-3 hover:bg-surface-container/40 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">刘晓红</span>
+                <span class="text-xs text-on-surface-variant"><span class="inline-flex items-center px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-400 text-xs">配偶</span></span>
+                <span class="text-sm text-on-surface-variant font-mono">186****4567</span>
+                <span class="text-sm text-on-surface-variant">北京市</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">FM20240115003</span>
+                <span class="text-sm text-on-surface-variant font-mono text-xs">U100891</span>
+                <div class="flex justify-center">
+                  <button class="btn-copy-row text-primary/70 hover:text-primary text-xs font-medium hover:underline transition-colors" data-row="5">复制</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分页控件 -->
+        <div class="flex items-center justify-between px-5 py-3 border-t border-outline/10 bg-surface-container/30">
+          <span class="text-xs text-on-surface-variant">共 <span class="text-on-surface font-medium">5</span> 条记录</span>
+          <div class="flex items-center gap-1">
+            <button id="btn-prev-page" class="px-2.5 py-1 rounded text-xs text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors border-none" disabled>
+              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <button class="btn-page px-2.5 py-1 rounded text-xs bg-primary/20 text-primary font-medium border-none">1</button>
+            <button id="btn-next-page" class="px-2.5 py-1 rounded text-xs text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors border-none" disabled>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <!-- @main-content:end -->
+
+  <script>
+  $(function() {
+    // ===== 面板状态 =====
+    let zoomLevel = 100;
+    const ZOOM_STEP = 10;
+    const ZOOM_MIN = 50;
+    const ZOOM_MAX = 150;
+    let isCollapsed = false;
+    let isMiniMode = false;
+
+    // ===== 拖拽功能 =====
+    let isDragging = false;
+    let dragStartX, dragStartY, panelStartX, panelStartY;
+
+    $('#panel-header').on('mousedown', function(e) {
+      if (isMiniMode) return;
+      isDragging = true;
+      const panel = $('#floating-panel');
+      const offset = panel.offset();
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      panelStartX = offset.left;
+      panelStartY = offset.top;
+      // 切换为 fixed 定位以便自由拖拽
+      panel.css({
+        position: 'fixed',
+        left: offset.left + 'px',
+        top: offset.top + 'px',
+        margin: 0,
+        zIndex: 100
+      });
+      $('main').css('pointer-events', 'none');
+      e.preventDefault();
+    });
+
+    $(document).on('mousemove', function(e) {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      $('#floating-panel').css({
+        left: (panelStartX + dx) + 'px',
+        top: (panelStartY + dy) + 'px'
+      });
+    });
+
+    $(document).on('mouseup', function() {
+      if (isDragging) {
+        isDragging = false;
+        $('main').css('pointer-events', '');
+      }
+    });
+
+    // ===== 缩放功能 =====
+    $('#btn-zoom-in').on('click', function() {
+      if (zoomLevel < ZOOM_MAX) {
+        zoomLevel += ZOOM_STEP;
+        updateZoom();
+      }
+    });
+
+    $('#btn-zoom-out').on('click', function() {
+      if (zoomLevel > ZOOM_MIN) {
+        zoomLevel -= ZOOM_STEP;
+        updateZoom();
+      }
+    });
+
+    function updateZoom() {
+      $('#zoom-display').text(zoomLevel + '%');
+      $('#floating-panel').css('transform', 'scale(' + (zoomLevel / 100) + ')');
+    }
+
+    // ===== 折叠/展开 =====
+    $('#btn-collapse').on('click', function() {
+      isCollapsed = !isCollapsed;
+      if (isCollapsed) {
+        $('#panel-body').slideUp(200);
+        $('#btn-collapse').find('[data-lucide]').attr('data-lucide', 'chevron-down');
+      } else {
+        $('#panel-body').slideDown(200);
+        $('#btn-collapse').find('[data-lucide]').attr('data-lucide', 'chevron-up');
+      }
+      lucide.createIcons();
+    });
+
+    // ===== 精简模式（双击标题栏） =====
+    $('#panel-header').on('dblclick', function() {
+      if (isDragging) return;
+      isMiniMode = true;
+      $('#floating-panel').fadeOut(200, function() {
+        $('#mini-icon').removeClass('hidden').addClass('flex');
+        lucide.createIcons();
+      });
+    });
+
+    // 双击小图标恢复面板
+    $('#mini-icon').on('dblclick', function() {
+      isMiniMode = false;
+      $('#mini-icon').removeClass('flex').addClass('hidden');
+      $('#floating-panel').fadeIn(200);
+    });
+
+    // ===== 功能按钮事件 =====
+    // 查询短信数据 - 显示结果弹窗
+    $('#btn-sms-query').on('click', function() {
+      $('#result-modal').fadeIn(200);
+    });
+
+    // 后续版本按钮 - 提示即将上线
+    $('#btn-batch-sales, #btn-send-sms, #btn-repay-status, #btn-batch-remark, #btn-customer-profile').on('click', function() {
+      const btnText = $(this).contents().filter(function() { return this.nodeType === 3; }).text().trim();
+      console.log('功能 "' + btnText + '" 即将上线，敬请期待');
+    });
+
+    // ===== 弹窗交互 =====
+    // 关闭弹窗
+    $('#btn-close-modal').on('click', function() {
+      $('#result-modal').fadeOut(200);
+    });
+
+    // 点击遮罩关闭
+    $('#result-modal').on('click', function(e) {
+      if (e.target === this) {
+        $(this).fadeOut(200);
+      }
+    });
+
+    // 复制全部按钮
+    $('#btn-copy-all').on('click', function() {
+      console.log('复制全部短信数据到剪贴板');
+      const originalText = $(this).html();
+      $(this).html('<i data-lucide="check" class="w-3.5 h-3.5"></i> 已复制');
+      lucide.createIcons();
+      setTimeout(() => {
+        $(this).html(originalText);
+        lucide.createIcons();
+      }, 1500);
+    });
+
+    // 单行复制
+    $('#table-body').on('click', '.btn-copy-row', function() {
+      const row = $(this).closest('.grid');
+      const name = row.find('span:first').text();
+      console.log('复制联系人信息:', name);
+      const $btn = $(this);
+      $btn.text('已复制!');
+      setTimeout(() => { $btn.text('复制'); }, 1200);
+    });
+
+    // 刷新按钮
+    $('#btn-refresh').on('click', function() {
+      console.log('刷新短信数据');
+      const $icon = $(this).find('[data-lucide]');
+      $icon.css('animation', 'spin 0.5s linear');
+      setTimeout(() => { $icon.css('animation', ''); }, 500);
+    });
+
+    // 筛选输入框
+    $('#input-filter').on('input', function() {
+      const keyword = $(this).val().toLowerCase();
+      $('#table-body > div').each(function() {
+        const text = $(this).text().toLowerCase();
+        $(this).toggle(text.indexOf(keyword) !== -1);
+      });
+    });
+
+    // ===== 名言随机展示 =====
+    const quotes = [
+      '"每一次沟通，都是信任的积累。"',
+      '"坚持是最好的催收策略。"',
+      '"用心服务，收获信赖。"',
+      '"专业与温度并行。"',
+      '"数据驱动，精准触达。"'
+    ];
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    $('#daily-quote').text(randomQuote);
+  });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

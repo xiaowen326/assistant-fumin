@@ -1,0 +1,12 @@
+{
+  "elements": [
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/web/home.html"
+      },
+      "title": "富民系统小助手-悬浮面板",
+      "size": "web"
+    }
+  ]
+}
