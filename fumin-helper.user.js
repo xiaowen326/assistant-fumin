@@ -65,7 +65,7 @@
         };
 
         const notification = document.createElement('div');
-        notification.className = `fm-notification fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-[999999] transition-all duration-300 transform translate-x-full`;
+        notification.className = `fm-notification fm-notification`;
         notification.textContent = message;
         document.body.appendChild(notification);
 
@@ -85,16 +85,16 @@
         if (existing) existing.remove();
 
         const container = document.createElement('div');
-        container.className = 'fm-progress-container fixed bottom-4 right-4 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg p-4 z-[999998] min-w-[300px] shadow-xl';
+        container.className = 'fm-progress-container fm-progress-container';
         container.innerHTML = `
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-white text-sm font-medium">${title}</span>
-                <button class="fm-progress-minimize text-gray-400 hover:text-white text-xs">最小化</button>
+            <div class="fm-progress-header">
+                <span class="fm-fm-text-white fm-fm-text-sm fm-fm-font-medium">${title}</span>
+                <button class="fm-progress-minimize fm-progress-minimize">最小化</button>
             </div>
-            <div class="w-full bg-gray-700 rounded-full h-2 mb-2">
-                <div class="fm-progress-bar bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            <div class="fm-progress-track">
+                <div class="fm-progress-bar fm-progress-bar" style="width: 0%"></div>
             </div>
-            <div class="flex justify-between text-xs text-gray-400">
+            <div class="fm-progress-info">
                 <span class="fm-progress-text">0 / ${total}</span>
                 <span class="fm-progress-percent">0%</span>
             </div>
@@ -126,7 +126,7 @@
     // 后台任务指示器
     function createProgressIndicator() {
         const indicator = document.createElement('div');
-        indicator.className = 'fm-progress-indicator fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-full shadow-lg z-[999997] hidden cursor-pointer hover:bg-green-500 transition-colors';
+        indicator.className = 'fm-progress-indicator fm-progress-indicator';
         indicator.textContent = '任务进行中...';
         indicator.addEventListener('click', () => {
             indicator.classList.add('hidden');
@@ -143,41 +143,41 @@
         if (existing) existing.remove();
 
         const modal = document.createElement('div');
-        modal.className = 'fm-result-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-[999999] flex items-center justify-center p-4';
+        modal.className = 'fm-result-modal';
 
         const modalContent = document.createElement('div');
-        modalContent.className = 'bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[80vh] overflow-hidden border border-gray-700';
+        modalContent.className = 'fm-modal-content';
 
         // 标题栏
         const header = document.createElement('div');
-        header.className = 'flex justify-between items-center p-4 border-b border-gray-700';
+        header.className = 'fm-modal-header';
         header.innerHTML = `
-            <h3 class="text-white font-semibold text-lg">${title} (${data.length} 条)</h3>
-            <button class="fm-modal-close text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            <h3 class="fm-text-white fm-font-semibold fm-text-lg">${title} (${data.length} 条)</h3>
+            <button class="fm-modal-close">&times;</button>
         `;
 
         // 工具栏
         const toolbar = document.createElement('div');
-        toolbar.className = 'p-4 border-b border-gray-700 flex gap-2';
+        toolbar.className = 'fm-modal-toolbar';
         toolbar.innerHTML = `
-            <input type="text" class="fm-filter-input flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-green-500 focus:outline-none text-sm" placeholder="筛选...">
-            <button class="fm-copy-all bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">复制全部</button>
+            <input type="text" class="fm-filter-input" placeholder="筛选...">
+            <button class="fm-copy-all-btn">复制全部</button>
         `;
 
         // 表格容器
         const tableContainer = document.createElement('div');
-        tableContainer.className = 'overflow-auto max-h-[50vh]';
+        tableContainer.className = 'fm-overflow-auto';
 
         const table = document.createElement('table');
-        table.className = 'w-full text-sm';
+        table.className = 'fm-result-table';
 
         // 表头
         const thead = document.createElement('thead');
-        thead.className = 'bg-gray-700/50 sticky top-0';
+        thead.className = 'fm-table-thead';
         const headerRow = document.createElement('tr');
         columns.forEach(col => {
             const th = document.createElement('th');
-            th.className = 'px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:text-white';
+            th.className = 'fm-table-th';
             th.textContent = col.label;
             th.dataset.key = col.key;
             headerRow.appendChild(th);
@@ -187,7 +187,7 @@
 
         // 表体
         const tbody = document.createElement('tbody');
-        tbody.className = 'divide-y divide-gray-700';
+        tbody.className = 'fm-divide-y';
 
         function renderTable(filterText = '') {
             tbody.innerHTML = '';
@@ -198,18 +198,18 @@
 
             filtered.forEach((row, idx) => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-700/30 transition-colors';
+                tr.className = 'fm-table-row';
                 columns.forEach(col => {
                     const td = document.createElement('td');
-                    td.className = 'px-4 py-3 text-gray-300 whitespace-nowrap';
+                    td.className = 'fm-table-td';
                     td.textContent = row[col.key] || '-';
                     tr.appendChild(td);
                 });
                 // 复制按钮列
                 const actionTd = document.createElement('td');
-                actionTd.className = 'px-4 py-3';
+                actionTd.className = 'fm-table-td-action';
                 const copyBtn = document.createElement('button');
-                copyBtn.className = 'text-green-400 hover:text-green-300 text-xs';
+                copyBtn.className = 'fm-text-green-400 hover:text-green-300 fm-text-xs';
                 copyBtn.textContent = '复制';
                 copyBtn.addEventListener('click', () => {
                     const text = columns.map(col => `${col.label}: ${row[col.key] || '-'}`).join('\n');
@@ -253,14 +253,14 @@
     function showPrompt(title, placeholder = '', defaultValue = '') {
         return new Promise((resolve) => {
             const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-[999999] flex items-center justify-center p-4';
+            modal.className = 'fm-result-modal';
             modal.innerHTML = `
-                <div class="bg-gray-800 rounded-xl shadow-2xl max-w-md w-full border border-gray-700 p-6">
-                    <h3 class="text-white font-semibold text-lg mb-4">${title}</h3>
-                    <textarea class="fm-prompt-input w-full bg-gray-700 text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-green-500 focus:outline-none resize-none" rows="6" placeholder="${placeholder}">${defaultValue}</textarea>
-                    <div class="flex justify-end gap-2 mt-4">
-                        <button class="fm-prompt-cancel bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg text-sm">取消</button>
-                        <button class="fm-prompt-confirm bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium">确认</button>
+                <div class="fm-prompt-content">
+                    <h3 class="fm-text-white fm-font-semibold fm-text-lg fm-mb-4">${title}</h3>
+                    <textarea class="fm-prompt-input fm-prompt-input" rows="6" placeholder="${placeholder}">${defaultValue}</textarea>
+                    <div class="fm-prompt-actions">
+                        <button class="fm-prompt-cancel fm-prompt-cancel">取消</button>
+                        <button class="fm-prompt-confirm fm-prompt-confirm">确认</button>
                     </div>
                 </div>
             `;
@@ -508,84 +508,423 @@
         }
     }
 
-    // == 悬浮面板 UI ==
+    // == 注入样式 ==
+    function injectStyles() {
+        if (document.querySelector('#fm-helper-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'fm-helper-styles';
+        style.textContent = `
+            .fm-floating-panel {
+                position: fixed !important;
+                top: 80px !important;
+                right: 16px !important;
+                width: 320px !important;
+                background: rgba(22, 27, 34, 0.95) !important;
+                backdrop-filter: blur(12px) !important;
+                border: 1px solid rgba(48, 54, 61, 0.8) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 0 20px rgba(0, 230, 118, 0.15), 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+                z-index: 999990 !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                color: #E6EDF3 !important;
+                overflow: hidden !important;
+            }
+            .fm-panel-header {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 12px 16px !important;
+                border-bottom: 1px solid rgba(48, 54, 61, 0.8) !important;
+                cursor: move !important;
+                background: rgba(13, 17, 23, 0.8) !important;
+                user-select: none !important;
+            }
+            .fm-panel-title-wrap {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+            }
+            .fm-panel-icon {
+                font-size: 18px !important;
+                color: #00E676 !important;
+            }
+            .fm-panel-title-text {
+                color: #E6EDF3 !important;
+                font-weight: 600 !important;
+                font-size: 14px !important;
+            }
+            .fm-panel-controls {
+                display: flex !important;
+                align-items: center !important;
+                gap: 4px !important;
+            }
+            .fm-zoom-level {
+                color: #8B949E !important;
+                font-size: 12px !important;
+                margin-right: 8px !important;
+                min-width: 40px !important;
+                text-align: center !important;
+            }
+            .fm-btn-control {
+                color: #8B949E !important;
+                padding: 4px 8px !important;
+                border-radius: 4px !important;
+                font-size: 12px !important;
+                cursor: pointer !important;
+                background: transparent !important;
+                border: none !important;
+                transition: all 0.2s !important;
+            }
+            .fm-btn-control:hover {
+                color: #E6EDF3 !important;
+                background: rgba(48, 54, 61, 0.6) !important;
+            }
+            .fm-panel-content {
+                padding: 0 !important;
+            }
+            .fm-token-status {
+                padding: 12px 16px !important;
+                border-bottom: 1px solid rgba(48, 54, 61, 0.6) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+            .fm-token-status-wrap {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+            }
+            .fm-token-dot {
+                width: 8px !important;
+                height: 8px !important;
+                border-radius: 50% !important;
+                background: #ef4444 !important;
+            }
+            .fm-token-dot.valid {
+                background: #00E676 !important;
+                box-shadow: 0 0 8px rgba(0, 230, 118, 0.6) !important;
+            }
+            .fm-token-text {
+                color: #8B949E !important;
+                font-size: 12px !important;
+            }
+            .fm-token-text.valid {
+                color: #00E676 !important;
+            }
+            .fm-btn-set-token {
+                color: #00E676 !important;
+                font-size: 12px !important;
+                cursor: pointer !important;
+                background: rgba(0, 230, 118, 0.1) !important;
+                border: 1px solid rgba(0, 230, 118, 0.3) !important;
+                border-radius: 4px !important;
+                padding: 4px 10px !important;
+                transition: all 0.2s !important;
+            }
+            .fm-btn-set-token:hover {
+                background: rgba(0, 230, 118, 0.2) !important;
+            }
+            .fm-function-buttons {
+                padding: 16px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            .fm-btn-sms-data {
+                width: 100% !important;
+                padding: 12px 16px !important;
+                background: linear-gradient(135deg, #00E676 0%, #00C853 100%) !important;
+                border: none !important;
+                border-radius: 8px !important;
+                color: #000000 !important;
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                transition: all 0.2s !important;
+                box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3) !important;
+            }
+            .fm-btn-sms-data:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 16px rgba(0, 230, 118, 0.4) !important;
+            }
+            .fm-btn-placeholder {
+                width: 100% !important;
+                padding: 10px 16px !important;
+                background: rgba(48, 54, 61, 0.4) !important;
+                border: 1px solid rgba(72, 79, 88, 0.4) !important;
+                border-radius: 8px !important;
+                color: #8B949E !important;
+                font-size: 13px !important;
+                cursor: not-allowed !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                opacity: 0.6 !important;
+            }
+            .fm-btn-placeholder .coming-soon {
+                margin-left: auto !important;
+                font-size: 11px !important;
+                color: #6B7280 !important;
+            }
+            .fm-quote {
+                padding: 12px 16px !important;
+                border-top: 1px solid rgba(48, 54, 61, 0.6) !important;
+                text-align: center !important;
+            }
+            .fm-quote-text {
+                color: #6B7280 !important;
+                font-size: 11px !important;
+                font-style: italic !important;
+                margin: 0 !important;
+            }
+            .fm-compact-icon {
+                display: none !important;
+                position: fixed !important;
+                bottom: 16px !important;
+                right: 16px !important;
+                width: 48px !important;
+                height: 48px !important;
+                background: #00E676 !important;
+                border-radius: 50% !important;
+                box-shadow: 0 4px 12px rgba(0, 230, 118, 0.4) !important;
+                align-items: center !important;
+                justify-content: center !important;
+                cursor: pointer !important;
+                z-index: 999991 !important;
+                transition: all 0.2s !important;
+            }
+            .fm-compact-icon.visible {
+                display: flex !important;
+            }
+            .fm-compact-icon:hover {
+                background: #00C853 !important;
+                transform: scale(1.1) !important;
+            }
+            .fm-compact-icon span {
+                font-size: 24px !important;
+            }
+            .fm-notification {
+                position: fixed !important;
+                top: 20px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                padding: 12px 24px !important;
+                border-radius: 8px !important;
+                font-size: 14px !important;
+                font-weight: 500 !important;
+                z-index: 9999999 !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+                animation: fm-slideDown 0.3s ease !important;
+            }
+            .fm-notification.success { background: rgba(0, 230, 118, 0.9) !important; color: #000 !important; }
+            .fm-notification.error { background: rgba(239, 68, 68, 0.9) !important; color: #fff !important; }
+            .fm-notification.warning { background: rgba(245, 158, 11, 0.9) !important; color: #000 !important; }
+            @keyframes fm-slideDown {
+                from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+            .fm-progress-container {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                background: rgba(22, 27, 34, 0.98) !important;
+                border: 1px solid rgba(48, 54, 61, 0.8) !important;
+                border-radius: 12px !important;
+                padding: 24px !important;
+                min-width: 320px !important;
+                z-index: 9999998 !important;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+            }
+            .fm-progress-title { font-size: 14px !important; font-weight: 600 !important; color: #E6EDF3 !important; margin-bottom: 16px !important; }
+            .fm-progress-bar { width: 100% !important; height: 8px !important; background: rgba(48, 54, 61, 0.6) !important; border-radius: 4px !important; overflow: hidden !important; margin-bottom: 12px !important; }
+            .fm-progress-fill { height: 100% !important; background: linear-gradient(90deg, #00E676 0%, #00C853 100%) !important; border-radius: 4px !important; transition: width 0.3s ease !important; }
+            .fm-progress-text { font-size: 12px !important; color: #8B949E !important; text-align: center !important; }
+            .fm-progress-indicator {
+                position: fixed !important;
+                bottom: 20px !important;
+                right: 20px !important;
+                background: rgba(22, 27, 34, 0.95) !important;
+                border: 1px solid rgba(0, 230, 118, 0.3) !important;
+                border-radius: 8px !important;
+                padding: 12px 16px !important;
+                font-size: 12px !important;
+                color: #00E676 !important;
+                z-index: 9999997 !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+            }
+            .fm-progress-indicator .spinner {
+                width: 14px !important;
+                height: 14px !important;
+                border: 2px solid rgba(0, 230, 118, 0.3) !important;
+                border-top-color: #00E676 !important;
+                border-radius: 50% !important;
+                animation: fm-spin 0.8s linear infinite !important;
+            }
+            @keyframes fm-spin { to { transform: rotate(360deg); } }
+            .fm-modal-overlay {
+                position: fixed !important;
+                top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+                background: rgba(0, 0, 0, 0.7) !important;
+                z-index: 9999996 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            .fm-modal {
+                background: rgba(22, 27, 34, 0.98) !important;
+                border: 1px solid rgba(48, 54, 61, 0.8) !important;
+                border-radius: 12px !important;
+                padding: 24px !important;
+                min-width: 320px !important;
+                max-width: 480px !important;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+            }
+            .fm-modal-title { font-size: 16px !important; font-weight: 600 !important; color: #E6EDF3 !important; margin-bottom: 16px !important; }
+            .fm-modal-input {
+                width: 100% !important;
+                padding: 10px 12px !important;
+                background: rgba(13, 17, 23, 0.8) !important;
+                border: 1px solid rgba(48, 54, 61, 0.8) !important;
+                border-radius: 6px !important;
+                color: #E6EDF3 !important;
+                font-size: 14px !important;
+                margin-bottom: 16px !important;
+                outline: none !important;
+                box-sizing: border-box !important;
+            }
+            .fm-modal-input:focus { border-color: rgba(0, 230, 118, 0.5) !important; }
+            .fm-modal-buttons { display: flex !important; gap: 12px !important; justify-content: flex-end !important; }
+            .fm-modal-btn { padding: 8px 16px !important; border-radius: 6px !important; font-size: 14px !important; cursor: pointer !important; transition: all 0.2s !important; border: none !important; }
+            .fm-modal-btn-primary { background: #00E676 !important; color: #000 !important; font-weight: 600 !important; }
+            .fm-modal-btn-primary:hover { background: #00C853 !important; }
+            .fm-modal-btn-secondary { background: rgba(48, 54, 61, 0.6) !important; color: #E6EDF3 !important; }
+            .fm-modal-btn-secondary:hover { background: rgba(72, 79, 88, 0.8) !important; }
+            .fm-result-modal {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                background: rgba(22, 27, 34, 0.98) !important;
+                border: 1px solid rgba(48, 54, 61, 0.8) !important;
+                border-radius: 12px !important;
+                padding: 24px !important;
+                min-width: 600px !important;
+                max-width: 90vw !important;
+                max-height: 80vh !important;
+                overflow: auto !important;
+                z-index: 9999995 !important;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+            }
+            .fm-result-header { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 16px !important; padding-bottom: 12px !important; border-bottom: 1px solid rgba(48, 54, 61, 0.6) !important; }
+            .fm-result-title { font-size: 16px !important; font-weight: 600 !important; color: #E6EDF3 !important; }
+            .fm-result-close { width: 28px !important; height: 28px !important; display: flex !important; align-items: center !important; justify-content: center !important; background: rgba(48, 54, 61, 0.6) !important; border: none !important; border-radius: 6px !important; color: #E6EDF3 !important; cursor: pointer !important; font-size: 16px !important; }
+            .fm-result-close:hover { background: rgba(239, 68, 68, 0.6) !important; }
+            .fm-result-filters { display: flex !important; gap: 12px !important; margin-bottom: 16px !important; }
+            .fm-result-filter-input { flex: 1 !important; padding: 8px 12px !important; background: rgba(13, 17, 23, 0.8) !important; border: 1px solid rgba(48, 54, 61, 0.8) !important; border-radius: 6px !important; color: #E6EDF3 !important; font-size: 13px !important; outline: none !important; box-sizing: border-box !important; }
+            .fm-result-filter-input:focus { border-color: rgba(0, 230, 118, 0.5) !important; }
+            .fm-result-btn { padding: 8px 16px !important; background: rgba(0, 230, 118, 0.1) !important; border: 1px solid rgba(0, 230, 118, 0.3) !important; border-radius: 6px !important; color: #00E676 !important; font-size: 13px !important; cursor: pointer !important; transition: all 0.2s !important; }
+            .fm-result-btn:hover { background: rgba(0, 230, 118, 0.2) !important; }
+            .fm-result-table { width: 100% !important; border-collapse: collapse !important; font-size: 13px !important; }
+            .fm-result-table th { padding: 10px 12px !important; text-align: left !important; background: rgba(13, 17, 23, 0.8) !important; border-bottom: 1px solid rgba(48, 54, 61, 0.8) !important; color: #8B949E !important; font-weight: 600 !important; white-space: nowrap !important; }
+            .fm-result-table td { padding: 10px 12px !important; border-bottom: 1px solid rgba(48, 54, 61, 0.4) !important; color: #E6EDF3 !important; }
+            .fm-result-table tr:hover td { background: rgba(48, 54, 61, 0.3) !important; }
+            .fm-result-pagination { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-top: 16px !important; padding-top: 12px !important; border-top: 1px solid rgba(48, 54, 61, 0.6) !important; font-size: 13px !important; color: #8B949E !important; }
+            .fm-result-pagination-btns { display: flex !important; gap: 8px !important; }
+            .fm-result-page-btn { padding: 6px 12px !important; background: rgba(48, 54, 61, 0.6) !important; border: 1px solid rgba(72, 79, 88, 0.4) !important; border-radius: 4px !important; color: #E6EDF3 !important; cursor: pointer !important; font-size: 12px !important; }
+            .fm-result-page-btn:hover:not(:disabled) { background: rgba(72, 79, 88, 0.8) !important; }
+            .fm-result-page-btn:disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
+        `;
+        document.head.appendChild(style);
+    }
 
+    // == 创建悬浮面板 ==
     function createFloatingPanel() {
         // 检查是否已存在
         if (document.querySelector('.fm-floating-panel')) return;
 
+        // 先注入样式
+        injectStyles();
+
         const panel = document.createElement('div');
-        panel.className = 'fm-floating-panel fixed top-20 right-4 z-[999990] w-80 bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-700 overflow-hidden';
-        panel.style.boxShadow = '0 0 20px rgba(0, 230, 118, 0.15), 0 10px 40px rgba(0, 0, 0, 0.5)';
+        panel.className = 'fm-floating-panel';
+        panel.id = 'fm-helper-panel';
 
         panel.innerHTML = `
             <!-- 标题栏 -->
-            <div class="fm-panel-header flex justify-between items-center p-3 border-b border-gray-700 cursor-move bg-gray-800/50">
-                <div class="flex items-center gap-2">
-                    <span class="text-green-400 text-lg">🤖</span>
-                    <span class="text-white font-semibold text-sm">富民系统小助手</span>
+            <div class="fm-panel-header" id="fm-drag-handle">
+                <div class="fm-panel-title-wrap">
+                    <span class="fm-panel-icon">🤖</span>
+                    <span class="fm-panel-title-text">富民系统小助手</span>
                 </div>
-                <div class="flex items-center gap-1">
-                    <span class="fm-zoom-level text-gray-400 text-xs mr-2">100%</span>
-                    <button class="fm-btn-zoom-out text-gray-400 hover:text-white px-1.5 py-0.5 rounded text-xs" title="缩小">-</button>
-                    <button class="fm-btn-zoom-in text-gray-400 hover:text-white px-1.5 py-0.5 rounded text-xs" title="放大">+</button>
-                    <button class="fm-btn-collapse text-gray-400 hover:text-white px-1.5 py-0.5 rounded text-xs" title="折叠">−</button>
+                <div class="fm-panel-controls">
+                    <span class="fm-zoom-level" id="fm-zoom-level">100%</span>
+                    <button class="fm-btn-control" id="fm-btn-zoom-out" title="缩小">−</button>
+                    <button class="fm-btn-control" id="fm-btn-zoom-in" title="放大">+</button>
+                    <button class="fm-btn-control" id="fm-btn-toggle" title="折叠">−</button>
                 </div>
             </div>
 
             <!-- 内容区 -->
-            <div class="fm-panel-content">
+            <div class="fm-panel-content" id="fm-panel-content">
                 <!-- Token 状态 -->
-                <div class="fm-token-status p-3 border-b border-gray-700 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="fm-token-dot w-2 h-2 rounded-full bg-red-500"></div>
-                        <span class="fm-token-text text-gray-400 text-xs">Token 未设置</span>
+                <div class="fm-token-status">
+                    <div class="fm-token-status-wrap">
+                        <div class="fm-token-dot" id="fm-token-dot"></div>
+                        <span class="fm-token-text" id="fm-token-text">Token 未设置</span>
                     </div>
-                    <button class="fm-btn-set-token text-green-400 hover:text-green-300 text-xs">设置</button>
+                    <button class="fm-btn-set-token" id="fm-btn-set-token">设置</button>
                 </div>
 
                 <!-- 功能按钮区 -->
-                <div class="fm-function-buttons p-3 space-y-2">
-                    <button class="fm-btn-sms-data w-full bg-green-600 hover:bg-green-500 text-white py-2.5 rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:shadow-green-600/20 flex items-center justify-center gap-2">
+                <div class="fm-function-buttons" id="fm-function-buttons">
+                    <button class="fm-btn-sms-data" id="fm-btn-sms-data">
                         <span>📨</span>
                         <span>查询短信数据</span>
                     </button>
-                    <button class="fm-btn-placeholder w-full bg-gray-700/50 text-gray-500 py-2.5 rounded-lg text-sm cursor-not-allowed flex items-center justify-center gap-2" disabled>
+                    <button class="fm-btn-placeholder" disabled>
                         <span>📋</span>
                         <span>批量查询销售</span>
-                        <span class="text-xs ml-auto">即将上线</span>
+                        <span class="coming-soon">即将上线</span>
                     </button>
-                    <button class="fm-btn-placeholder w-full bg-gray-700/50 text-gray-500 py-2.5 rounded-lg text-sm cursor-not-allowed flex items-center justify-center gap-2" disabled>
+                    <button class="fm-btn-placeholder" disabled>
                         <span>💬</span>
                         <span>发送系统短信</span>
-                        <span class="text-xs ml-auto">即将上线</span>
+                        <span class="coming-soon">即将上线</span>
                     </button>
-                    <button class="fm-btn-placeholder w-full bg-gray-700/50 text-gray-500 py-2.5 rounded-lg text-sm cursor-not-allowed flex items-center justify-center gap-2" disabled>
+                    <button class="fm-btn-placeholder" disabled>
                         <span></span>
                         <span>查询还款状态</span>
-                        <span class="text-xs ml-auto">即将上线</span>
+                        <span class="coming-soon">即将上线</span>
                     </button>
-                    <button class="fm-btn-placeholder w-full bg-gray-700/50 text-gray-500 py-2.5 rounded-lg text-sm cursor-not-allowed flex items-center justify-center gap-2" disabled>
-                        <span>📝</span>
+                    <button class="fm-btn-placeholder" disabled>
+                        <span></span>
                         <span>批量添加催记</span>
-                        <span class="text-xs ml-auto">即将上线</span>
+                        <span class="coming-soon">即将上线</span>
                     </button>
-                    <button class="fm-btn-placeholder w-full bg-gray-700/50 text-gray-500 py-2.5 rounded-lg text-sm cursor-not-allowed flex items-center justify-center gap-2" disabled>
-                        <span>👤</span>
+                    <button class="fm-btn-placeholder" disabled>
+                        <span></span>
                         <span>查询客户画像</span>
-                        <span class="text-xs ml-auto">即将上线</span>
+                        <span class="coming-soon">即将上线</span>
                     </button>
                 </div>
 
                 <!-- 底部名言 -->
-                <div class="fm-quote p-3 border-t border-gray-700 text-center">
-                    <p class="fm-quote-text text-gray-500 text-xs italic">"${QUOTES[Math.floor(Math.random() * QUOTES.length)]}"</p>
+                <div class="fm-quote">
+                    <p class="fm-quote-text" id="fm-quote-text">"${QUOTES[Math.floor(Math.random() * QUOTES.length)]}"</p>
                 </div>
             </div>
 
             <!-- 精简模式图标 -->
-            <div class="fm-compact-icon hidden fixed bottom-4 right-4 w-12 h-12 bg-green-600 rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:bg-green-500 transition-colors z-[999991]">
-                <span class="text-white text-xl">🤖</span>
+            <div class="fm-compact-icon" id="fm-compact-icon">
+                <span></span>
             </div>
         `;
 
@@ -690,7 +1029,7 @@
                 tokenDot.classList.add('bg-green-500');
                 tokenDot.style.boxShadow = '0 0 8px rgba(34, 197, 94, 0.6)';
                 tokenText.textContent = 'Token 已设置';
-                tokenText.classList.remove('text-gray-400');
+                tokenText.classList.remove('fm-text-gray-400');
                 tokenText.classList.add('text-green-400');
             } else {
                 tokenDot.classList.remove('bg-green-500');
@@ -698,7 +1037,7 @@
                 tokenDot.style.boxShadow = 'none';
                 tokenText.textContent = 'Token 未设置';
                 tokenText.classList.remove('text-green-400');
-                tokenText.classList.add('text-gray-400');
+                tokenText.classList.add('fm-text-gray-400');
             }
         }
 
