@@ -231,18 +231,6 @@
                     td.textContent = row[col.key] || '-';
                     tr.appendChild(td);
                 });
-                // 复制按钮列
-                const actionTd = document.createElement('td');
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'fm-copy-btn';
-                copyBtn.textContent = '复制';
-                copyBtn.addEventListener('click', () => {
-                    const text = columns.map(col => `${col.label}: ${row[col.key] || '-'}`).join('\n');
-                    navigator.clipboard.writeText(text);
-                    createNotification('已复制到剪贴板', 'success', 1500);
-                });
-                actionTd.appendChild(copyBtn);
-                tr.appendChild(actionTd);
                 tbody.appendChild(tr);
             });
         }
@@ -288,7 +276,7 @@
             modal.innerHTML = `
                 <div class="fm-prompt-content">
                     <h3 class="fm-text-white fm-font-semibold fm-text-lg fm-mb-4">${title}</h3>
-                    <textarea class="fm-prompt-input fm-prompt-input" rows="6" placeholder="${placeholder}">${defaultValue}</textarea>
+                    <textarea class="fm-prompt-input fm-prompt-input" rows="2" placeholder="${placeholder}">${defaultValue}</textarea>
                     <div class="fm-prompt-actions">
                         <button class="fm-prompt-cancel fm-prompt-cancel">取消</button>
                         <button class="fm-prompt-confirm fm-prompt-confirm">确认</button>
@@ -777,10 +765,58 @@
                 z-index: 9999998 !important;
                 box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
             }
-            .fm-progress-title { font-size: 14px !important; font-weight: 600 !important; color: #E6EDF3 !important; margin-bottom: 16px !important; }
-            .fm-progress-bar { width: 100% !important; height: 8px !important; background: rgba(48, 54, 61, 0.6) !important; border-radius: 4px !important; overflow: hidden !important; margin-bottom: 12px !important; }
-            .fm-progress-fill { height: 100% !important; background: linear-gradient(90deg, #00E676 0%, #00C853 100%) !important; border-radius: 4px !important; transition: width 0.3s ease !important; }
-            .fm-progress-text { font-size: 12px !important; color: #8B949E !important; text-align: center !important; }
+            .fm-progress-header {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                margin-bottom: 16px !important;
+            }
+            .fm-progress-header span {
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                color: #E6EDF3 !important;
+            }
+            .fm-progress-minimize {
+                background: rgba(48, 54, 61, 0.6) !important;
+                border: 1px solid rgba(72, 79, 88, 0.5) !important;
+                color: #8B949E !important;
+                padding: 4px 12px !important;
+                border-radius: 6px !important;
+                font-size: 12px !important;
+                cursor: pointer !important;
+            }
+            .fm-progress-minimize:hover {
+                background: rgba(72, 79, 88, 0.8) !important;
+                color: #E6EDF3 !important;
+            }
+            .fm-progress-track {
+                width: 100% !important;
+                height: 8px !important;
+                background: rgba(48, 54, 61, 0.6) !important;
+                border-radius: 4px !important;
+                overflow: hidden !important;
+                margin-bottom: 12px !important;
+            }
+            .fm-progress-bar {
+                height: 100% !important;
+                background: linear-gradient(90deg, #00E676 0%, #00C853 100%) !important;
+                border-radius: 4px !important;
+                transition: width 0.3s ease !important;
+            }
+            .fm-progress-info {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+            }
+            .fm-progress-text {
+                font-size: 12px !important;
+                color: #8B949E !important;
+            }
+            .fm-progress-percent {
+                font-size: 12px !important;
+                color: #00E676 !important;
+                font-weight: 600 !important;
+            }
             .fm-progress-indicator {
                 position: fixed !important;
                 bottom: 20px !important;
