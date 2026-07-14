@@ -843,6 +843,53 @@
             .fm-modal-btn-primary:hover { background: #00C853 !important; }
             .fm-modal-btn-secondary { background: rgba(48, 54, 61, 0.6) !important; color: #E6EDF3 !important; }
             .fm-modal-btn-secondary:hover { background: rgba(72, 79, 88, 0.8) !important; }
+            .fm-prompt-content {
+                background: rgba(22, 27, 34, 0.98) !important;
+                border: 1px solid rgba(48, 54, 61, 0.8) !important;
+                border-radius: 12px !important;
+                padding: 24px !important;
+                min-width: 320px !important;
+                max-width: 480px !important;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+            }
+            .fm-prompt-input {
+                width: 100% !important;
+                padding: 10px 12px !important;
+                background: rgba(13, 17, 23, 0.8) !important;
+                border: 1px solid rgba(48, 54, 61, 0.8) !important;
+                border-radius: 6px !important;
+                color: #E6EDF3 !important;
+                font-size: 14px !important;
+                margin-bottom: 16px !important;
+                outline: none !important;
+                box-sizing: border-box !important;
+                resize: vertical !important;
+            }
+            .fm-prompt-input:focus { border-color: rgba(0, 230, 118, 0.5) !important; }
+            .fm-prompt-actions { display: flex !important; gap: 12px !important; justify-content: flex-end !important; }
+            .fm-prompt-cancel {
+                padding: 8px 16px !important;
+                border-radius: 6px !important;
+                font-size: 14px !important;
+                cursor: pointer !important;
+                transition: all 0.2s !important;
+                border: none !important;
+                background: rgba(48, 54, 61, 0.6) !important;
+                color: #E6EDF3 !important;
+            }
+            .fm-prompt-cancel:hover { background: rgba(72, 79, 88, 0.8) !important; }
+            .fm-prompt-confirm {
+                padding: 8px 16px !important;
+                border-radius: 6px !important;
+                font-size: 14px !important;
+                cursor: pointer !important;
+                transition: all 0.2s !important;
+                border: none !important;
+                background: #00E676 !important;
+                color: #000 !important;
+                font-weight: 600 !important;
+            }
+            .fm-prompt-confirm:hover { background: #00C853 !important; }
             .fm-result-overlay {
                 position: fixed !important;
                 top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
