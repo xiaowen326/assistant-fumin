@@ -16,7 +16,33 @@
     'use strict';
 
     // == 版本标记 ==
-    window.__FM_VERSION = 'v20260714A';
+    window.__FM_VERSION = 'v20260714B';
+
+    // == GM API 兼容层（支持 Tampermonkey 和 控制台直接运行）==
+    const GM_setValue = typeof GM_setValue !== 'undefined' ? GM_setValue : function(key, value) {
+        try { localStorage.setItem('__fm_' + key, JSON.stringify(value)); } catch(e) {}
+    };
+    const GM_getValue = typeof GM_getValue !== 'undefined' ? GM_getValue : function(key, defaultValue) {
+        try {
+            const v = localStorage.getItem('__fm_' + key);
+            return v !== null ? JSON.parse(v) : defaultValue;
+        } catch(e) { return defaultValue; }
+    };
+    const GM_xmlhttpRequest = typeof GM_xmlhttpRequest !== 'undefined' ? GM_xmlhttpRequest : function(details) {
+        // 使用 fetch 作为 fallback
+        const method = details.method || 'GET';
+        const headers = details.headers || {};
+        fetch(details.url, {
+            method: method,
+            headers: headers,
+            body: details.data,
+            credentials: 'include'
+        }).then(response => response.text()).then(responseText => {
+            if (details.onload) details.onload({ status: 200, responseText: responseText });
+        }).catch(error => {
+            if (details.onerror) details.onerror(error);
+        });
+    };
 
     // == 全局命名空间 ==
     window.__FM = window.__FM || {
