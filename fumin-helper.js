@@ -300,6 +300,9 @@ function showPrompt(title, placeholder = '', defaultValue = '') {
     });
 }
 
+// asyncPrompt 别名（用于批量添加催记等功能）
+const asyncPrompt = showPrompt;
+
 // == Token 管理 ==
 
 // 从 Cookie 获取 Token
