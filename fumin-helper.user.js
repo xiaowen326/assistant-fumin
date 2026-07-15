@@ -446,6 +446,16 @@
         });
     }
 
+    // 获取银行卡列表
+    async function getBankCardList(caseId) {
+        return fmRequest(`/cs2/user/repayment/getBankCardListByCaseId?caseId=${caseId}`, null, 'GET');
+    }
+
+    // 实时扣款
+    async function withholdRepay(params) {
+        return fmRequest('/cs2/user/repayment/withholdRepayApply', params);
+    }
+
     // == 核心功能：短信数据查询 ==
 
     async function querySmsData() {
@@ -724,6 +734,169 @@
             indicator.remove();
             createNotification('查询失败: ' + error.message, 'error');
             console.error('批量查询还款失败:', error);
+        }
+    }
+
+    // == 核心功能：批量实时扣款 ==
+
+    async function batchWithholdRepay() {
+        if (!TOKEN) {
+            createNotification('请先设置 Token', 'error');
+            return;
+        }
+
+        const input = await showPrompt('批量实时扣款', '请输入案件ID（可选，留空扣款全部）', '');
+        if (input === null) return;
+
+        const progress = createProgressBar('正在执行批量扣款...', 100);
+        const indicator = createProgressIndicator();
+
+        try {
+            // 第一步：获取案件列表
+            console.log('[富民系统小助手] 批量扣款 - 开始获取案件列表');
+            const caseResponse = await getPagingCase();
+            console.log('[富民系统小助手] 批量扣款 - 案件列表响应:', JSON.stringify(caseResponse));
+            
+            let cases = caseResponse.result?.data || [];
+            
+            // 如果输入了案件ID，筛选
+            if (input.trim()) {
+                const caseIds = input.split(',').map(id => parseInt(id.trim()));
+                cases = cases.filter(c => caseIds.includes(c.id));
+            }
+
+            if (cases.length === 0) {
+                progress.element.remove();
+                indicator.remove();
+                createNotification('未找到匹配的案件', 'warning');
+                return;
+            }
+
+            progress.update(10, cases.length);
+            console.log('[富民系统小助手] 批量扣款 - 案件数量:', cases.length);
+
+            // 第二步：逐个执行扣款
+            const results = [];
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < cases.length; i++) {
+                const caseItem = cases[i];
+                const current = i + 1;
+                progress.update(current, cases.length);
+                indicator.textContent = `正在扣款 ${current}/${cases.length}...`;
+
+                try {
+                    // 1. 查询借据编号
+                    const loanResponse = await queryLoanByCase(caseItem.id);
+                    const listingNumber = loanResponse.result?.[0]?.listingNumber;
+                    
+                    if (!listingNumber) {
+                        results.push({
+                            '客户姓名': caseItem.userRealName || '-',
+                            '案件ID': caseItem.id,
+                            '扣款状态': '失败',
+                            '失败原因': '未找到借据',
+                            '用户ID': caseItem.userId
+                        });
+                        failCount++;
+                        continue;
+                    }
+
+                    // 2. 查询金额明细
+                    const calcResponse = await queryIouCalculate(caseItem.id, listingNumber);
+                    const calcResult = calcResponse.result || {};
+                    
+                    // 3. 查询银行卡信息
+                    const bankResponse = await getBankCardList(caseItem.id);
+                    const bankList = bankResponse.result || [];
+                    
+                    if (bankList.length === 0) {
+                        results.push({
+                            '客户姓名': caseItem.userRealName || '-',
+                            '案件ID': caseItem.id,
+                            '扣款状态': '失败',
+                            '失败原因': '未找到银行卡',
+                            '用户ID': caseItem.userId
+                        });
+                        failCount++;
+                        continue;
+                    }
+
+                    const bank = bankList[0]; // 取第一张银行卡
+
+                    // 4. 执行扣款
+                    const withholdParams = {
+                        caseId: caseItem.id,
+                        iouNo: listingNumber,
+                        remark: '',
+                        bankAccountType: bank.acctType,
+                        bankAccountName: bank.acctName,
+                        bankCardNo: bank.encryptedAcctNo,
+                        bankName: bank.bankName,
+                        bankMobileNo: bank.encryptedMobile,
+                        repayAmt: calcResult.normalShouldRepayTotalAmt || 0,
+                        withholdCinAmt: calcResult.shouldRepayCinAmt || 0,
+                        withholdRepayType: 'NORMAL',
+                        withholdIntAmt: calcResult.shouldRepayIntAmt || 0,
+                        withholdPinAmt: calcResult.shouldRepayPinAmt || 0,
+                        withholdPriAmt: calcResult.shouldRepayPriAmt || 0
+                    };
+
+                    const withholdResponse = await withholdRepay(withholdParams);
+                    
+                    if (withholdResponse.code === 0) {
+                        results.push({
+                            '客户姓名': caseItem.userRealName || '-',
+                            '案件ID': caseItem.id,
+                            '扣款状态': '成功',
+                            '扣款金额': calcResult.normalShouldRepayTotalAmt || 0,
+                            '用户ID': caseItem.userId
+                        });
+                        successCount++;
+                    } else {
+                        results.push({
+                            '客户姓名': caseItem.userRealName || '-',
+                            '案件ID': caseItem.id,
+                            '扣款状态': '失败',
+                            '失败原因': withholdResponse.message || '未知错误',
+                            '用户ID': caseItem.userId
+                        });
+                        failCount++;
+                    }
+
+                } catch (error) {
+                    results.push({
+                        '客户姓名': caseItem.userRealName || '-',
+                        '案件ID': caseItem.id,
+                        '扣款状态': '失败',
+                        '失败原因': error.message,
+                        '用户ID': caseItem.userId
+                    });
+                    failCount++;
+                }
+            }
+
+            progress.element.remove();
+            indicator.remove();
+
+            // 展示结果
+            displayResults(results, [
+                { key: '客户姓名', label: '客户姓名' },
+                { key: '案件ID', label: '案件ID' },
+                { key: '扣款状态', label: '扣款状态' },
+                { key: '扣款金额', label: '扣款金额' },
+                { key: '失败原因', label: '失败原因' },
+                { key: '用户ID', label: '用户ID' }
+            ], '批量实时扣款结果');
+
+            createNotification(`扣款完成：成功 ${successCount} 笔，失败 ${failCount} 笔`, successCount > 0 ? 'success' : 'error');
+
+        } catch (error) {
+            progress.element.remove();
+            indicator.remove();
+            createNotification('扣款失败: ' + error.message, 'error');
+            console.error('批量实时扣款失败:', error);
         }
     }
 
@@ -1314,10 +1487,9 @@
                         <span>📨</span>
                         <span>查询短信数据</span>
                     </button>
-                    <button class="fm-btn-placeholder" disabled>
+                    <button class="fm-btn-sms-data" id="fm-btn-withhold-repay" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;">
                         <span>⚡</span>
                         <span>批量实时扣款</span>
-                        <span class="coming-soon">即将上线</span>
                     </button>
                     <button class="fm-btn-placeholder" disabled>
                         <span>💬</span>
@@ -1496,6 +1668,11 @@
         const repaymentBtn = panel.querySelector('#fm-btn-repayment-data');
         if (repaymentBtn) {
             repaymentBtn.addEventListener('click', queryRepaymentData);
+        }
+
+        const withholdBtn = panel.querySelector('#fm-btn-withhold-repay');
+        if (withholdBtn) {
+            withholdBtn.addEventListener('click', batchWithholdRepay);
         }
 
         // 初始化 Token 状态
