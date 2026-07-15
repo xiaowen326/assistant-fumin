@@ -634,17 +634,21 @@
                         // 第二步：查询还款信息
                         const repaymentResponse = await queryRepayment(listingNumber);
                         console.log('[富民系统小助手] 还款响应:', JSON.stringify(repaymentResponse));
-                        const repaymentData = repaymentResponse.result || {};
-                        console.log('[富民系统小助手] 还款数据:', JSON.stringify(repaymentData));
+                        const repaymentList = repaymentResponse.result || [];
+                        console.log('[富民系统小助手] 还款数据:', JSON.stringify(repaymentList));
+                        
+                        // 取最新一条记录（数组第一个）
+                        const repaymentData = repaymentList[0] || {};
 
                         return {
                             '客户姓名': caseItem.userRealName || '-',
                             '案件ID': caseItem.id,
                             '借据编号': listingNumber,
-                            '还款状态': repaymentData.status || '-',
-                            '应还金额': repaymentData.repayAmount || '-',
-                            '已还金额': repaymentData.paidAmount || '-',
-                            '剩余金额': repaymentData.remainAmount || '-',
+                            '还款状态': repaymentData.repaymentStatus || '-',
+                            '应还金额': repaymentData.shouldRepayAmount || '-',
+                            '已还金额': repaymentData.actualRepayAmount || '-',
+                            '扣款方式': repaymentData.repaymentWay || '-',
+                            '处理时间': repaymentData.createDateTime || '-',
                             '用户ID': caseItem.userId
                         };
                     } catch (e) {
@@ -685,7 +689,8 @@
                 { key: '还款状态', label: '还款状态' },
                 { key: '应还金额', label: '应还金额' },
                 { key: '已还金额', label: '已还金额' },
-                { key: '剩余金额', label: '剩余金额' },
+                { key: '扣款方式', label: '扣款方式' },
+                { key: '处理时间', label: '处理时间' },
                 { key: '用户ID', label: '用户ID' }
             ], '批量查询还款结果');
 
