@@ -972,13 +972,8 @@
         try {
             console.log('[富民系统小助手] 批量添加催记 - 开始执行');
 
-            // 弹窗输入催记内容
-            const dunContent = await asyncPrompt('请输入催记内容', '批量添加催记');
-            if (!dunContent) {
-                createNotification('已取消操作', 'info');
-                return;
-            }
-
+            // 固定催记内容
+            const dunContent = '批量添加催记';
             console.log('[富民系统小助手] 批量添加催记 - 催记内容:', dunContent);
 
             // 显示进度条
@@ -995,7 +990,7 @@
                     'token': TOKEN,
                     'appid': '3'
                 },
-                data: JSON.stringify({
+                body: JSON.stringify({
                     pageSize: 100,
                     pageNum: 1
                 })
@@ -1038,7 +1033,7 @@
                             'token': TOKEN,
                             'appid': '3'
                         },
-                        data: JSON.stringify({
+                        body: JSON.stringify({
                             caseId: caseId,
                             assetId: ASSET_ID,
                             userId: userId
@@ -1075,7 +1070,7 @@
                             'token': TOKEN,
                             'appid': '3'
                         },
-                        data: JSON.stringify({
+                        body: JSON.stringify({
                             caseId: caseId,
                             encryptCallNumber: selfContact.encryptMobile,
                             callStatus: 8,
@@ -1286,6 +1281,27 @@
             .fm-btn-sms-data:hover {
                 transform: translateY(-2px) !important;
                 box-shadow: 0 6px 16px rgba(0, 230, 118, 0.4) !important;
+            }
+            .fm-btn-add-dun-record {
+                width: 100% !important;
+                padding: 12px 16px !important;
+                background: linear-gradient(135deg, #A855F7 0%, #7E22CE 100%) !important;
+                border: none !important;
+                border-radius: 8px !important;
+                color: #FFFFFF !important;
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                transition: all 0.2s !important;
+                box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3) !important;
+            }
+            .fm-btn-add-dun-record:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4) !important;
             }
             .fm-btn-placeholder {
                 width: 100% !important;
@@ -1744,7 +1760,7 @@
                         <span></span>
                         <span>批量查询还款</span>
                     </button>
-                    <button class="fm-btn-placeholder" id="fm-btn-add-dun-record" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%) !important; color: white !important; cursor: pointer !important;">
+                    <button class="fm-btn fm-btn-add-dun-record" id="fm-btn-add-dun-record">
                         <span></span>
                         <span>批量添加催记</span>
                     </button>
