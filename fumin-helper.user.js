@@ -878,7 +878,7 @@
                         if (repaymentResponse.code === 0 && repaymentResponse.result && repaymentResponse.result.length > 0) {
                             const latestRepayment = repaymentResponse.result[0];
                             if (latestRepayment.repaymentStatus === '成功') {
-                                repaymentStatus = '已还款';
+                                repaymentStatus = '扣款成功';
                             } else {
                                 repaymentStatus = '扣款失败';
                             }
