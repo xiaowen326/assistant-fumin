@@ -404,6 +404,22 @@ async function queryContactList(caseId, userId) {
     });
 }
 
+// 查询借据编号（第一步）
+async function queryLoanByCase(caseId) {
+    return fmRequest('/cs2/user/edge/case/queryLoanByCase', {
+        caseId: caseId,
+        finished: 'NOT_FINISH'
+    });
+}
+
+// 查询还款信息（第二步）
+async function queryRepayment(iousId) {
+    return fmRequest('/cs2/user/query/order/repayment', {
+        assetId: ASSET_ID,
+        iousId: iousId
+    });
+}
+
 // == 核心功能：短信数据查询 ==
 
 async function querySmsData() {
@@ -513,6 +529,142 @@ async function querySmsData() {
         indicator.remove();
         createNotification('查询失败: ' + error.message, 'error');
         console.error('短信数据查询失败:', error);
+    }
+}
+
+// == 核心功能：批量查询还款 ==
+
+async function queryRepaymentData() {
+    if (!TOKEN) {
+        createNotification('请先设置 Token', 'error');
+        return;
+    }
+
+    const input = await showPrompt('批量查询还款', '请输入案件ID（可选，留空查询全部）', '');
+    if (input === null) return;
+
+    const progress = createProgressBar('正在查询还款数据...', 100);
+    const indicator = createProgressIndicator();
+
+    try {
+        // 第一步：获取案件列表
+        progress.update(10, 100);
+        const caseResponse = await getPagingCase(1, 100);
+        const cases = caseResponse.result?.content || [];
+
+        if (cases.length === 0) {
+            progress.element.remove();
+            indicator.remove();
+            createNotification('未找到案件数据', 'warning');
+            return;
+        }
+
+        progress.update(20, 100);
+
+        // 如果指定了案件ID，过滤
+        let targetCases = cases;
+        if (input) {
+            const caseId = parseInt(input);
+            targetCases = cases.filter(c => c.id === caseId);
+            if (targetCases.length === 0) {
+                progress.element.remove();
+                indicator.remove();
+                createNotification('未找到指定案件', 'warning');
+                return;
+            }
+        }
+
+        // 第二步：并发查询借据编号和还款信息
+        const results = [];
+        const total = targetCases.length;
+        const batchSize = 10; // 并发数
+
+        for (let i = 0; i < total; i += batchSize) {
+            if (window.__FM.batchCallAborted) {
+                createNotification('查询已中止', 'warning');
+                break;
+            }
+
+            const batch = targetCases.slice(i, i + batchSize);
+            const batchPromises = batch.map(async (caseItem) => {
+                try {
+                    // 第一步：查询借据编号
+                    const loanResponse = await queryLoanByCase(caseItem.id);
+                    const listingNumber = loanResponse.result?.listingNumber;
+
+                    if (!listingNumber) {
+                        return {
+                            '客户姓名': caseItem.userRealName || '-',
+                            '案件ID': caseItem.id,
+                            '借据编号': '-',
+                            '还款状态': '未找到借据',
+                            '用户ID': caseItem.userId
+                        };
+                    }
+
+                    // 第二步：查询还款信息
+                    const repaymentResponse = await queryRepayment(listingNumber);
+                    const repaymentData = repaymentResponse.result || {};
+
+                    return {
+                        '客户姓名': caseItem.userRealName || '-',
+                        '案件ID': caseItem.id,
+                        '借据编号': listingNumber,
+                        '还款状态': repaymentData.status || '-',
+                        '应还金额': repaymentData.repayAmount || '-',
+                        '已还金额': repaymentData.paidAmount || '-',
+                        '剩余金额': repaymentData.remainAmount || '-',
+                        '用户ID': caseItem.userId
+                    };
+                } catch (e) {
+                    console.error(`查询案件 ${caseItem.id} 还款信息失败:`, e);
+                    return {
+                        '客户姓名': caseItem.userRealName || '-',
+                        '案件ID': caseItem.id,
+                        '借据编号': '-',
+                        '还款状态': '查询失败',
+                        '用户ID': caseItem.userId
+                    };
+                }
+            });
+
+            const batchResults = await Promise.all(batchPromises);
+            batchResults.forEach(r => results.push(r));
+
+            const current = Math.min(i + batchSize, total);
+            progress.update(20 + Math.round((current / total) * 70), 100);
+        }
+
+        progress.complete();
+        setTimeout(() => {
+            progress.element.remove();
+            indicator.remove();
+        }, 1000);
+
+        if (results.length === 0) {
+            createNotification('未查询到还款数据', 'warning');
+            return;
+        }
+
+        // 展示结果
+        displayResults(results, [
+            { key: '客户姓名', label: '客户姓名' },
+            { key: '案件ID', label: '案件ID' },
+            { key: '借据编号', label: '借据编号' },
+            { key: '还款状态', label: '还款状态' },
+            { key: '应还金额', label: '应还金额' },
+            { key: '已还金额', label: '已还金额' },
+            { key: '剩余金额', label: '剩余金额' },
+            { key: '用户ID', label: '用户ID' }
+        ], '批量查询还款结果');
+
+        createNotification(`查询完成，共 ${results.length} 条还款数据`, 'success');
+
+    } catch (error) {
+        progress.element.remove();
+        indicator.remove();
+        createNotification('查询失败: ' + error.message, 'error');
+        console.error('批量查询还款失败:', error);
     }
 }
 
@@ -1113,10 +1265,9 @@ function createFloatingPanel() {
                     <span>发送系统短信</span>
                     <span class="coming-soon">即将上线</span>
                 </button>
-                <button class="fm-btn-placeholder" disabled>
+                <button class="fm-btn-sms-data" id="fm-btn-repayment-data" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;">
                     <span></span>
-                    <span>查询还款状态</span>
-                    <span class="coming-soon">即将上线</span>
+                    <span>批量查询还款</span>
                 </button>
                 <button class="fm-btn-placeholder" disabled>
                     <span></span>
@@ -1281,6 +1432,11 @@ function createFloatingPanel() {
     const smsDataBtn = panel.querySelector('#fm-btn-sms-data');
     if (smsDataBtn) {
         smsDataBtn.addEventListener('click', querySmsData);
+    }
+
+    const repaymentBtn = panel.querySelector('#fm-btn-repayment-data');
+    if (repaymentBtn) {
+        repaymentBtn.addEventListener('click', queryRepaymentData);
     }
 
     // 初始化 Token 状态
