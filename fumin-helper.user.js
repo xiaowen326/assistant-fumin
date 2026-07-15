@@ -437,6 +437,15 @@
         });
     }
 
+    // 查询未还金额
+    async function queryIouCalculate(caseId, iouNo) {
+        return fmRequest('/cs2/user/repayment/iouCalculate', {
+            caseId: caseId,
+            iouNo: iouNo,
+            repayType: 'NORMAL'
+        });
+    }
+
     // == 核心功能：短信数据查询 ==
 
     async function querySmsData() {
@@ -640,6 +649,18 @@
                         // 取最新一条记录（数组第一个）
                         const repaymentData = repaymentList[0] || {};
 
+                        // 第三步：查询未还金额
+                        let unpaidAmount = '-';
+                        try {
+                            const calcResponse = await queryIouCalculate(caseItem.id, listingNumber);
+                            console.log('[富民系统小助手] 未还金额响应:', JSON.stringify(calcResponse));
+                            if (calcResponse.result && calcResponse.result.normalShouldRepayTotalAmt) {
+                                unpaidAmount = calcResponse.result.normalShouldRepayTotalAmt;
+                            }
+                        } catch (e) {
+                            console.error('查询未还金额失败:', e);
+                        }
+
                         return {
                             '客户姓名': caseItem.userRealName || '-',
                             '案件ID': caseItem.id,
@@ -647,6 +668,7 @@
                             '还款状态': repaymentData.repaymentStatus || '-',
                             '应还金额': repaymentData.shouldRepayAmount || '-',
                             '已还金额': repaymentData.actualRepayAmount || '-',
+                            '未还金额': unpaidAmount,
                             '扣款方式': repaymentData.repaymentWay || '-',
                             '处理时间': repaymentData.createDateTime || '-',
                             '用户ID': caseItem.userId
@@ -689,6 +711,7 @@
                 { key: '还款状态', label: '还款状态' },
                 { key: '应还金额', label: '应还金额' },
                 { key: '已还金额', label: '已还金额' },
+                { key: '未还金额', label: '未还金额' },
                 { key: '扣款方式', label: '扣款方式' },
                 { key: '处理时间', label: '处理时间' },
                 { key: '用户ID', label: '用户ID' }
