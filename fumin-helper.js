@@ -367,7 +367,7 @@ function fmRequest(url, body, method = 'POST') {
             method: method,
             url: BASE_URL + url,
             headers: headers,
-            data: JSON.stringify(body),
+            data: body ? JSON.stringify(body) : undefined,
             onload: function(response) {
                 try {
                     const data = JSON.parse(response.responseText);
