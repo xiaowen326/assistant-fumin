@@ -871,11 +871,28 @@
                     const withholdResponse = await withholdRepay(withholdParams);
                     console.log(`[富民系统小助手] 批量扣款 - 扣款响应:`, JSON.stringify(withholdResponse));
                     
+                    // 查询最新还款记录，判断扣款结果
+                    let repaymentStatus = '-';
+                    try {
+                        const repaymentResponse = await queryRepayment(listingNumber);
+                        if (repaymentResponse.code === 0 && repaymentResponse.result && repaymentResponse.result.length > 0) {
+                            const latestRepayment = repaymentResponse.result[0];
+                            if (latestRepayment.repaymentStatus === '成功') {
+                                repaymentStatus = '已还款';
+                            } else {
+                                repaymentStatus = '扣款失败';
+                            }
+                        }
+                    } catch (repayError) {
+                        console.log(`[富民系统小助手] 批量扣款 - 查询还款记录失败:`, repayError);
+                    }
+                    
                     if (withholdResponse.code === 0) {
                         results.push({
                             '客户姓名': caseItem.userRealName || '-',
                             '案件ID': caseItem.id,
                             '扣款状态': '成功',
+                            '扣款结果': repaymentStatus,
                             '扣款金额': calcResult.normalShouldRepayTotalAmt || 0,
                             '用户ID': caseItem.userId
                         });
@@ -885,6 +902,7 @@
                             '客户姓名': caseItem.userRealName || '-',
                             '案件ID': caseItem.id,
                             '扣款状态': '失败',
+                            '扣款结果': repaymentStatus,
                             '失败原因': withholdResponse.message || '未知错误',
                             '用户ID': caseItem.userId
                         });
@@ -896,6 +914,7 @@
                         '客户姓名': caseItem.userRealName || '-',
                         '案件ID': caseItem.id,
                         '扣款状态': '失败',
+                        '扣款结果': '-',
                         '失败原因': error.message,
                         '用户ID': caseItem.userId
                     });
@@ -911,6 +930,7 @@
                 { key: '客户姓名', label: '客户姓名' },
                 { key: '案件ID', label: '案件ID' },
                 { key: '扣款状态', label: '扣款状态' },
+                { key: '扣款结果', label: '扣款结果' },
                 { key: '扣款金额', label: '扣款金额' },
                 { key: '失败原因', label: '失败原因' },
                 { key: '用户ID', label: '用户ID' }
