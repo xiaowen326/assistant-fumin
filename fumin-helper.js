@@ -2040,7 +2040,7 @@ createPasswordDialog(function() {
 }
 
 function createPasswordDialog(callback) {
-const savedHash = GM_getValue('fumin_auth_hash', '');
+const savedHash = _GM_getValue('fumin_auth_hash', '');
 if (savedHash === PASSWORD_HASH) {
     IS_AUTHENTICATED = true;
     callback();
@@ -2123,7 +2123,7 @@ async function verify() {
     if (hash === PASSWORD_HASH) {
         IS_AUTHENTICATED = true;
         if (rememberCheck.checked) {
-            GM_setValue('fumin_auth_hash', hash);
+            _GM_setValue('fumin_auth_hash', hash);
         }
         overlay.remove();
         callback();
