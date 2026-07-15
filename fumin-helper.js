@@ -956,7 +956,7 @@ async function batchAddDunRecord() {
         console.log('[富民系统小助手] 批量添加催记 - 开始执行');
 
         // 固定催记内容
-        const dunContent = '批量添加催记';
+        const dunContent = '无法接通';
         console.log('[富民系统小助手] 批量添加催记 - 催记内容:', dunContent);
 
         // 显示进度条
