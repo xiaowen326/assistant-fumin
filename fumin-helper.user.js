@@ -815,10 +815,11 @@
                     
                     // 3. 查询银行卡信息
                     console.log(`[富民系统小助手] 批量扣款 - 查询银行卡 (案件ID: ${caseItem.id})`);
+                    let bankList = [];
                     try {
                         const bankResponse = await getBankCardList(caseItem.id);
                         console.log(`[富民系统小助手] 批量扣款 - 银行卡响应:`, JSON.stringify(bankResponse));
-                            const bankList = bankResponse.result || [];
+                        bankList = bankResponse.result || [];
                         
                         if (bankList.length === 0) {
                             console.log(`[富民系统小助手] 批量扣款 - 未找到银行卡`);
