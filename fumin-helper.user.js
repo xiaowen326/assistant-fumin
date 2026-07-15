@@ -757,7 +757,7 @@
             const caseResponse = await getPagingCase();
             console.log('[富民系统小助手] 批量扣款 - 案件列表响应:', JSON.stringify(caseResponse));
             
-            let cases = caseResponse.result?.data || [];
+            let cases = caseResponse.result?.content || caseResponse.result?.data || [];
             
             // 如果输入了案件ID，筛选
             if (input.trim()) {
