@@ -1936,20 +1936,236 @@
         }
     }
 
+// == 公告弹窗 ==
+function showAnnouncement() {
+    const ANNOUNCEMENT_TITLE = ' 富民系统小助手公告';
+    const ANNOUNCEMENT_CONTENT = `
+<div style="line-height: 1.8;">
+  <p>1、批量添加催记功能已上线，催记内容固定为"无法接通"</p>
+  <p>2、批量实时扣款功能已上线，支持自动获取银行卡信息</p>
+  <p>3、批量查询还款功能已优化，显示扣款方式和处理时间</p>
+  <p>4、所有按钮样式已统一，支持光效和 hover 效果</p>
+</div>
+`;
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 100000;
+        display: flex; justify-content: center; align-items: center;
+        animation: fadeIn 0.3s ease;
+    `;
+
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+        background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+        border: 1px solid rgba(0, 230, 118, 0.4);
+        border-radius: 16px; padding: 24px;
+        box-shadow: 0 0 40px rgba(0, 230, 118, 0.15), 0 20px 60px rgba(0, 0, 0, 0.5);
+        width: 420px; max-width: 90vw; max-height: 80vh;
+        overflow-y: auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #e0e0e0;
+    `;
+
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = `
+        font-size: 18px; font-weight: bold; margin-bottom: 16px;
+        color: #00E676; text-align: center;
+        text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+    `;
+    titleEl.textContent = ANNOUNCEMENT_TITLE;
+
+    const contentEl = document.createElement('div');
+    contentEl.style.cssText = 'font-size: 14px; color: #ccc; margin-bottom: 20px;';
+    contentEl.innerHTML = ANNOUNCEMENT_CONTENT;
+
+    const btnContainer = document.createElement('div');
+    btnContainer.style.cssText = 'text-align: center;';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '我已知悉';
+    closeBtn.style.cssText = `
+        padding: 10px 40px; border: none; border-radius: 8px;
+        background: linear-gradient(135deg, #00c853, #00E676);
+        color: #1a1a2e; font-size: 15px; font-weight: bold;
+        cursor: pointer; transition: all 0.3s;
+        box-shadow: 0 0 15px rgba(0, 230, 118, 0.3);
+    `;
+    closeBtn.addEventListener('mouseenter', function() {
+        this.style.boxShadow = '0 0 25px rgba(0, 230, 118, 0.6)';
+        this.style.transform = 'scale(1.05)';
+    });
+    closeBtn.addEventListener('mouseleave', function() {
+        this.style.boxShadow = '0 0 15px rgba(0, 230, 118, 0.3)';
+        this.style.transform = 'scale(1)';
+    });
+    closeBtn.addEventListener('click', function() {
+        overlay.style.animation = 'fadeOut 0.2s ease forwards';
+        setTimeout(() => overlay.remove(), 200);
+    });
+
+    btnContainer.appendChild(closeBtn);
+    dialog.appendChild(titleEl);
+    dialog.appendChild(contentEl);
+    dialog.appendChild(btnContainer);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    const fadeStyle = document.createElement('style');
+    fadeStyle.textContent = `
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+    `;
+    if (!document.getElementById('announcement-fade-style')) {
+        fadeStyle.id = 'announcement-fade-style';
+        document.head.appendChild(fadeStyle);
+    }
+
+    overlay.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeBtn.click();
+    });
+}
+
+// == 密码验证 ==
+const PASSWORD_HASH = '92925488b28ab12584ac8fcaa8a27a0f497b2c62940c8f4fbc8ef19ebc87c43e';
+let IS_AUTHENTICATED = false;
+
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function createPasswordDialog(callback) {
+    const savedHash = GM_getValue('fumin_auth_hash', '');
+    if (savedHash === PASSWORD_HASH) {
+        IS_AUTHENTICATED = true;
+        callback();
+        return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'fumin-auth-overlay';
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); z-index: 99999;
+        display: flex; justify-content: center; align-items: center;
+    `;
+
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+        background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+        border: 1px solid rgba(0, 230, 118, 0.4);
+        border-radius: 12px; padding: 30px;
+        box-shadow: 0 0 40px rgba(0, 230, 118, 0.2), 0 8px 32px rgba(0,0,0,0.5);
+        width: 340px; text-align: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #00E676; text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);';
+    title.textContent = '🔒 富民系统助手验证';
+
+    const subtitle = document.createElement('div');
+    subtitle.style.cssText = 'font-size: 13px; color: #9ca3af; margin-bottom: 20px;';
+    subtitle.textContent = '请输入授权密码以启用助手';
+
+    const input = document.createElement('input');
+    input.type = 'password';
+    input.placeholder = '请输入密码';
+    input.style.cssText = `
+        width: 100%; padding: 12px 16px; border: 2px solid #374151;
+        border-radius: 8px; font-size: 15px; outline: none;
+        transition: border-color 0.3s; box-sizing: border-box;
+        background: #1f2937; color: #f3f4f6;
+    `;
+    input.addEventListener('focus', function() { this.style.borderColor = '#00E676'; });
+    input.addEventListener('blur', function() { this.style.borderColor = '#374151'; });
+
+    const errorTip = document.createElement('div');
+    errorTip.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 8px; height: 16px;';
+
+    const btn = document.createElement('button');
+    btn.textContent = '确认解锁';
+    btn.style.cssText = `
+        width: 100%; padding: 12px; margin-top: 16px;
+        background: linear-gradient(135deg, #00c853, #00E676);
+        color: #1a1a2e; border: none;
+        border-radius: 8px; font-size: 15px; font-weight: bold;
+        cursor: pointer; transition: all 0.3s;
+        box-shadow: 0 0 15px rgba(0, 230, 118, 0.3);
+    `;
+    btn.addEventListener('mouseenter', function() {
+        this.style.boxShadow = '0 0 25px rgba(0, 230, 118, 0.6)';
+        this.style.transform = 'scale(1.02)';
+    });
+    btn.addEventListener('mouseleave', function() {
+        this.style.boxShadow = '0 0 15px rgba(0, 230, 118, 0.3)';
+        this.style.transform = 'scale(1)';
+    });
+
+    const rememberLabel = document.createElement('label');
+    rememberLabel.style.cssText = 'display: flex; align-items: center; margin-top: 12px; font-size: 13px; color: #9ca3af; cursor: pointer;';
+    const rememberCheck = document.createElement('input');
+    rememberCheck.type = 'checkbox';
+    rememberCheck.style.cssText = 'margin-right: 6px;';
+    rememberCheck.checked = true;
+    rememberLabel.appendChild(rememberCheck);
+    rememberLabel.appendChild(document.createTextNode('记住密码（本次浏览器会话有效）'));
+
+    async function verify() {
+        const pwd = input.value.trim();
+        if (!pwd) { errorTip.textContent = '请输入密码'; return; }
+        const hash = await sha256(pwd);
+        if (hash === PASSWORD_HASH) {
+            IS_AUTHENTICATED = true;
+            if (rememberCheck.checked) {
+                GM_setValue('fumin_auth_hash', hash);
+            }
+            overlay.remove();
+            callback();
+        } else {
+            errorTip.textContent = '密码错误，请重试';
+            input.value = '';
+            input.style.borderColor = '#ef4444';
+            setTimeout(() => { input.style.borderColor = '#374151'; }, 1500);
+        }
+    }
+
+    btn.addEventListener('click', verify);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') verify(); });
+
+    dialog.appendChild(title);
+    dialog.appendChild(subtitle);
+    dialog.appendChild(input);
+    dialog.appendChild(errorTip);
+    dialog.appendChild(btn);
+    dialog.appendChild(rememberLabel);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    setTimeout(() => input.focus(), 100);
+}
+
     // == 初始化 ==
     function init() {
-        //console.log('富民系统小助手已加载', window.__FM_VERSION);
+        // 先显示公告
+        showAnnouncement();
+        
+        // 验证密码后才初始化助手
+        createPasswordDialog(function() {
+            // 初始化 Token
+            initToken();
 
-        // 初始化 Token
-        initToken();
+            // 创建悬浮面板
+            createFloatingPanel();
 
-        // 创建悬浮面板
-        createFloatingPanel();
-
-        // 显示加载通知
-        setTimeout(() => {
-            createNotification('富民系统小助手已加载', 'success', 2000);
-        }, 500);
+            // 显示加载通知
+            setTimeout(() => {
+                createNotification('富民系统小助手已加载', 'success', 2000);
+            }, 500);
+        });
     }
 
     // 等待页面加载完成
