@@ -771,10 +771,13 @@ async function batchWithholdRepay() {
 
             try {
                 // 1. 查询借据编号
+                console.log(`[富民系统小助手] 批量扣款 - 查询案件 ${caseItem.id} 的借据编号`);
                 const loanResponse = await queryLoanByCase(caseItem.id);
+                console.log(`[富民系统小助手] 批量扣款 - 借据响应:`, JSON.stringify(loanResponse));
                 const listingNumber = loanResponse.result?.[0]?.listingNumber;
                 
                 if (!listingNumber) {
+                    console.log(`[富民系统小助手] 批量扣款 - 未找到借据编号`);
                     results.push({
                         '客户姓名': caseItem.userRealName || '-',
                         '案件ID': caseItem.id,
@@ -785,16 +788,22 @@ async function batchWithholdRepay() {
                     failCount++;
                     continue;
                 }
+                console.log(`[富民系统小助手] 批量扣款 - 借据编号: ${listingNumber}`);
 
                 // 2. 查询金额明细
+                console.log(`[富民系统小助手] 批量扣款 - 查询金额明细`);
                 const calcResponse = await queryIouCalculate(caseItem.id, listingNumber);
+                console.log(`[富民系统小助手] 批量扣款 - 金额响应:`, JSON.stringify(calcResponse));
                 const calcResult = calcResponse.result || {};
                 
                 // 3. 查询银行卡信息
+                console.log(`[富民系统小助手] 批量扣款 - 查询银行卡`);
                 const bankResponse = await getBankCardList(caseItem.id);
+                console.log(`[富民系统小助手] 批量扣款 - 银行卡响应:`, JSON.stringify(bankResponse));
                 const bankList = bankResponse.result || [];
                 
                 if (bankList.length === 0) {
+                    console.log(`[富民系统小助手] 批量扣款 - 未找到银行卡`);
                     results.push({
                         '客户姓名': caseItem.userRealName || '-',
                         '案件ID': caseItem.id,
@@ -807,6 +816,7 @@ async function batchWithholdRepay() {
                 }
 
                 const bank = bankList[0]; // 取第一张银行卡
+                console.log(`[富民系统小助手] 批量扣款 - 使用银行卡: ${bank.bankName} ${bank.acctNo}`);
 
                 // 4. 执行扣款
                 const withholdParams = {
@@ -825,8 +835,10 @@ async function batchWithholdRepay() {
                     withholdPinAmt: calcResult.shouldRepayPinAmt || 0,
                     withholdPriAmt: calcResult.shouldRepayPriAmt || 0
                 };
+                console.log(`[富民系统小助手] 批量扣款 - 扣款参数:`, JSON.stringify(withholdParams));
 
                 const withholdResponse = await withholdRepay(withholdParams);
+                console.log(`[富民系统小助手] 批量扣款 - 扣款响应:`, JSON.stringify(withholdResponse));
                 
                 if (withholdResponse.code === 0) {
                     results.push({
