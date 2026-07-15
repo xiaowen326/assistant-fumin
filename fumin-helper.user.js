@@ -16,7 +16,7 @@
     'use strict';
 
     // == 版本标记 ==
-    window.__FM_VERSION = 'v20260714B';
+    window.__FM_VERSION = 'v20260714C';
 
     // == GM API 兼容层（支持 Tampermonkey 和 控制台直接运行）==
     // 使用 _GM_ 前缀避免与 Tampermonkey 注入的全局变量冲突
@@ -552,13 +552,18 @@
     // == 核心功能：批量查询还款 ==
 
     async function queryRepaymentData() {
+        console.log('[富民系统小助手] 批量查询还款 - 开始执行');
         if (!TOKEN) {
             createNotification('请先设置 Token', 'error');
             return;
         }
 
         const input = await showPrompt('批量查询还款', '请输入案件ID（可选，留空查询全部）', '');
-        if (input === null) return;
+        if (input === null) {
+            console.log('[富民系统小助手] 批量查询还款 - 用户取消');
+            return;
+        }
+        console.log('[富民系统小助手] 批量查询还款 - 用户输入:', input);
 
         const progress = createProgressBar('正在查询还款数据...', 100);
         const indicator = createProgressIndicator();
@@ -566,8 +571,11 @@
         try {
             // 第一步：获取案件列表
             progress.update(10, 100);
+            console.log('[富民系统小助手] 批量查询还款 - 开始获取案件列表');
             const caseResponse = await getPagingCase(1, 100);
+            console.log('[富民系统小助手] 批量查询还款 - 案件列表响应:', caseResponse);
             const cases = caseResponse.result?.content || [];
+            console.log('[富民系统小助手] 批量查询还款 - 案件数量:', cases.length);
 
             if (cases.length === 0) {
                 progress.element.remove();
@@ -605,9 +613,13 @@
                 const batch = targetCases.slice(i, i + batchSize);
                 const batchPromises = batch.map(async (caseItem) => {
                     try {
+                        console.log('[富民系统小助手] 查询案件:', caseItem.id, '用户:', caseItem.userId);
+                        
                         // 第一步：查询借据编号
                         const loanResponse = await queryLoanByCase(caseItem.id);
+                        console.log('[富民系统小助手] 借据响应:', loanResponse);
                         const listingNumber = loanResponse.result?.listingNumber;
+                        console.log('[富民系统小助手] 借据编号:', listingNumber);
 
                         if (!listingNumber) {
                             return {
