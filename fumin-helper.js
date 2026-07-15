@@ -452,6 +452,11 @@ async function withholdRepay(params) {
     return fmRequest('/cs2/user/repayment/withholdRepayApply', params);
 }
 
+// 添加催记
+async function addDunRecord(params) {
+    return fmRequest('/cs2/user/edge/dunRecord/add', params);
+}
+
 // == 核心功能：短信数据查询 ==
 
 async function querySmsData() {
@@ -939,6 +944,183 @@ async function batchWithholdRepay() {
         indicator.remove();
         createNotification('扣款失败: ' + error.message, 'error');
         console.error('批量实时扣款失败:', error);
+    }
+}
+
+// == 批量添加催记功能 ==
+async function batchAddDunRecord() {
+    try {
+        console.log('[富民系统小助手] 批量添加催记 - 开始执行');
+
+        // 弹窗输入催记内容
+        const dunContent = await asyncPrompt('请输入催记内容', '批量添加催记');
+        if (!dunContent) {
+            createNotification('已取消操作', 'info');
+            return;
+        }
+
+        console.log('[富民系统小助手] 批量添加催记 - 催记内容:', dunContent);
+
+        // 显示进度条
+        const progress = createProgressBar('批量添加催记', 0);
+        const indicator = document.querySelector('.fm-progress-indicator');
+        if (indicator) indicator.style.display = 'block';
+
+        // 第一步：获取案件列表
+        console.log('[富民系统小助手] 批量添加催记 - 开始获取案件列表');
+        const caseResponse = await fmRequest(`${BASE_URL}/cs2/user/edge/case/pagingCase`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'token': TOKEN,
+                'appid': '3'
+            },
+            data: JSON.stringify({
+                pageSize: 100,
+                pageNum: 1
+            })
+        });
+
+        const caseData = JSON.parse(caseResponse);
+        console.log('[富民系统小助手] 批量添加催记 - 案件列表响应:', caseData);
+
+        const cases = caseData.result?.content || [];
+        console.log('[富民系统小助手] 批量添加催记 - 案件数量:', cases.length);
+
+        if (cases.length === 0) {
+            progress.element.remove();
+            indicator.remove();
+            createNotification('未找到匹配的案件', 'warning');
+            return;
+        }
+
+        progress.update(0, cases.length);
+
+        const results = [];
+        let successCount = 0;
+        let failCount = 0;
+
+        // 第二步：对每个案件添加催记
+        for (let i = 0; i < cases.length; i++) {
+            const caseItem = cases[i];
+            const caseId = caseItem.id;
+            const userId = caseItem.userId;
+            const customerName = caseItem.userRealName || '-';
+
+            try {
+                console.log(`[富民系统小助手] 批量添加催记 - 处理案件 ${caseId} 用户 ${userId}`);
+
+                // 查询联系人列表
+                const contactResponse = await fmRequest(`${BASE_URL}/cs2/user/contact/queryContactList`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'token': TOKEN,
+                        'appid': '3'
+                    },
+                    data: JSON.stringify({
+                        caseId: caseId,
+                        assetId: ASSET_ID,
+                        userId: userId
+                    })
+                });
+
+                const contactData = JSON.parse(contactResponse);
+                console.log('[富民系统小助手] 批量添加催记 - 联系人响应:', contactData);
+
+                const contacts = contactData.result || [];
+                // 筛选本人联系人
+                const selfContact = contacts.find(c => c.relation === '本人');
+
+                if (!selfContact) {
+                    console.log('[富民系统小助手] 批量添加催记 - 未找到本人联系人');
+                    results.push({
+                        customerName: customerName,
+                        caseId: caseId,
+                        status: '失败',
+                        reason: '未找到本人联系人',
+                        userId: userId
+                    });
+                    failCount++;
+                    continue;
+                }
+
+                console.log('[富民系统小助手] 批量添加催记 - 使用联系人:', selfContact.realName, selfContact.relation);
+
+                // 调用添加催记接口
+                const dunResponse = await fmRequest(`${BASE_URL}/cs2/user/edge/dunRecord/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'token': TOKEN,
+                        'appid': '3'
+                    },
+                    data: JSON.stringify({
+                        caseId: caseId,
+                        encryptCallNumber: selfContact.encryptMobile,
+                        callStatus: 8,
+                        body: dunContent,
+                        isMultiCall: false,
+                        source: 2,
+                        needCollection: 0,
+                        signId: null,
+                        contactsName: selfContact.realName,
+                        contactsRelation: selfContact.relation
+                    })
+                });
+
+                const dunData = JSON.parse(dunResponse);
+                console.log('[富民系统小助手] 批量添加催记 - 催记响应:', dunData);
+
+                if (dunData.code === 0) {
+                    results.push({
+                        customerName: customerName,
+                        caseId: caseId,
+                        status: '成功',
+                        reason: '-',
+                        userId: userId
+                    });
+                    successCount++;
+                } else {
+                    results.push({
+                        customerName: customerName,
+                        caseId: caseId,
+                        status: '失败',
+                        reason: dunData.message || '未知错误',
+                        userId: userId
+                    });
+                    failCount++;
+                }
+
+            } catch (error) {
+                console.error('[富民系统小助手] 批量添加催记 - 案件处理失败:', error);
+                results.push({
+                    customerName: customerName,
+                    caseId: caseId,
+                    status: '失败',
+                    reason: '网络请求失败',
+                    userId: userId
+                });
+                failCount++;
+            }
+
+            progress.update(i + 1, cases.length);
+        }
+
+        // 显示结果
+        displayResults(results, [
+            { key: 'customerName', label: '客户姓名' },
+            { key: 'caseId', label: '案件ID' },
+            { key: 'status', label: '添加状态' },
+            { key: 'reason', label: '失败原因' },
+            { key: 'userId', label: '用户ID' }
+        ], '批量添加催记结果');
+
+        createNotification(`催记添加完成：成功 ${successCount} 笔，失败 ${failCount} 笔`, successCount > 0 ? 'success' : 'error');
+
+    } catch (error) {
+        createNotification('批量添加催记失败：' + error.message, 'error');
+        console.error('批量添加催记失败:', error);
     }
 }
 
@@ -1542,10 +1724,9 @@ function createFloatingPanel() {
                     <span></span>
                     <span>批量查询还款</span>
                 </button>
-                <button class="fm-btn-placeholder" disabled>
+                <button class="fm-btn-placeholder" id="fm-btn-add-dun-record" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%) !important; color: white !important; cursor: pointer !important;">
                     <span></span>
                     <span>批量添加催记</span>
-                    <span class="coming-soon">即将上线</span>
                 </button>
                 <button class="fm-btn-placeholder" disabled>
                     <span></span>
@@ -1715,6 +1896,11 @@ function createFloatingPanel() {
     const withholdBtn = panel.querySelector('#fm-btn-withhold-repay');
     if (withholdBtn) {
         withholdBtn.addEventListener('click', batchWithholdRepay);
+    }
+
+    const dunBtn = panel.querySelector('#fm-btn-add-dun-record');
+    if (dunBtn) {
+        dunBtn.addEventListener('click', batchAddDunRecord);
     }
 
     // 初始化 Token 状态
