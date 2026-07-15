@@ -1984,7 +1984,11 @@ closeBtn.addEventListener('mouseleave', function() {
 });
 closeBtn.addEventListener('click', function() {
     overlay.style.animation = 'fadeOut 0.2s ease forwards';
-    setTimeout(() => overlay.remove(), 200);
+    setTimeout(() => {
+        overlay.remove();
+        // 公告关闭后显示密码弹窗
+        showPasswordDialog();
+    }, 200);
 });
 
 btnContainer.appendChild(closeBtn);
@@ -2018,6 +2022,21 @@ const msgBuffer = new TextEncoder().encode(message);
 const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
 const hashArray = Array.from(new Uint8Array(hashBuffer));
 return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function showPasswordDialog() {
+createPasswordDialog(function() {
+    // 初始化 Token
+    initToken();
+
+    // 创建悬浮面板
+    createFloatingPanel();
+
+    // 显示加载通知
+    setTimeout(() => {
+        createNotification('富民系统小助手已加载', 'success', 2000);
+    }, 500);
+});
 }
 
 function createPasswordDialog(callback) {
@@ -2135,20 +2154,6 @@ setTimeout(() => input.focus(), 100);
 function init() {
     // 先显示公告
     showAnnouncement();
-    
-    // 验证密码后才初始化助手
-    createPasswordDialog(function() {
-        // 初始化 Token
-        initToken();
-
-        // 创建悬浮面板
-        createFloatingPanel();
-
-        // 显示加载通知
-        setTimeout(() => {
-            createNotification('富民系统小助手已加载', 'success', 2000);
-        }, 500);
-    });
 }
 
 // 等待页面加载完成
