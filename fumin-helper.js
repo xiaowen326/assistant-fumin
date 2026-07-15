@@ -127,6 +127,14 @@ function createProgressBar(title, total) {
         complete: () => {
             container.querySelector('.fm-progress-bar').style.background = '#3b82f6';
             container.querySelector('.fm-progress-text').textContent = '完成';
+            // 2 秒后自动移除
+            setTimeout(() => {
+                if (container.parentNode) {
+                    container.style.opacity = '0';
+                    container.style.transition = 'opacity 0.3s';
+                    setTimeout(() => container.remove(), 300);
+                }
+            }, 2000);
         },
         element: container
     };
@@ -1107,7 +1115,7 @@ function injectStyles() {
         .fm-floating-panel {
             position: fixed !important;
             top: 80px !important;
-            right: 16px !important;
+            left: calc(100vw - 336px) !important;
             width: 320px !important;
             background: rgba(22, 27, 34, 0.95) !important;
             backdrop-filter: blur(12px) !important;
@@ -1288,10 +1296,11 @@ function injectStyles() {
             text-align: center !important;
         }
         .fm-quote-text {
-            color: #6B7280 !important;
-            font-size: 11px !important;
+            color: #9CA3AF !important;
+            font-size: 13px !important;
             font-style: italic !important;
             margin: 0 !important;
+            line-height: 1.5 !important;
         }
         .fm-compact-icon {
             display: none !important;
@@ -1817,20 +1826,12 @@ function createFloatingPanel() {
         });
     }
 
-    // == 精简模式（双击标题栏） ==
+    // == 精简模式（已禁用双击，改为通过按钮控制） ==
     const compactIcon = panel.querySelector('#fm-compact-icon');
     let isCompact = false;
 
-    header.addEventListener('dblclick', () => {
-        isCompact = !isCompact;
-        if (isCompact) {
-            panel.style.display = 'none';
-            if (compactIcon) compactIcon.style.display = 'flex';
-        } else {
-            panel.style.display = 'block';
-            if (compactIcon) compactIcon.style.display = 'none';
-        }
-    });
+    // 双击标题栏功能已移除，避免误操作
+    // header.addEventListener('dblclick', () => { ... });
 
     if (compactIcon) {
         compactIcon.addEventListener('click', () => {
