@@ -971,7 +971,7 @@ async function batchAddDunRecord() {
             pageNum: 1
         });
 
-        const caseData = JSON.parse(caseResponse);
+        const caseData = caseResponse;
         console.log('[富民系统小助手] 批量添加催记 - 案件列表响应:', caseData);
 
         const cases = caseData.result?.content || [];
@@ -1007,7 +1007,7 @@ async function batchAddDunRecord() {
                     userId: userId
                 });
 
-                const contactData = JSON.parse(contactResponse);
+                const contactData = contactResponse;
                 console.log('[富民系统小助手] 批量添加催记 - 联系人响应:', contactData);
 
                 const contacts = contactData.result || [];
@@ -1043,7 +1043,7 @@ async function batchAddDunRecord() {
                     contactsRelation: selfContact.relation
                 });
 
-                const dunData = JSON.parse(dunResponse);
+                const dunData = dunResponse;
                 console.log('[富民系统小助手] 批量添加催记 - 催记响应:', dunData);
 
                 if (dunData.code === 0) {
