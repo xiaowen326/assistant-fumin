@@ -234,10 +234,10 @@
                     // 根据状态设置颜色
                     if (col.key === 'repaymentStatus' || col.key === 'deductResult') {
                         if (value === '成功' || value === '已还款' || value === '扣款成功') {
-                            td.style.color = '#00E676';
+                            td.style.setProperty('color', '#00E676', 'important');
                             td.style.fontWeight = '600';
                         } else if (value === '失败' || value === '扣款失败') {
-                            td.style.color = '#EF4444';
+                            td.style.setProperty('color', '#EF4444', 'important');
                             td.style.fontWeight = '600';
                         }
                     }
