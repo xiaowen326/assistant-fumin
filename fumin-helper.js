@@ -797,18 +797,31 @@ async function batchWithholdRepay() {
                 const calcResult = calcResponse.result || {};
                 
                 // 3. 查询银行卡信息
-                console.log(`[富民系统小助手] 批量扣款 - 查询银行卡`);
-                const bankResponse = await getBankCardList(caseItem.id);
-                console.log(`[富民系统小助手] 批量扣款 - 银行卡响应:`, JSON.stringify(bankResponse));
-                const bankList = bankResponse.result || [];
-                
-                if (bankList.length === 0) {
-                    console.log(`[富民系统小助手] 批量扣款 - 未找到银行卡`);
+                console.log(`[富民系统小助手] 批量扣款 - 查询银行卡 (案件ID: ${caseItem.id})`);
+                try {
+                    const bankResponse = await getBankCardList(caseItem.id);
+                    console.log(`[富民系统小助手] 批量扣款 - 银行卡响应:`, JSON.stringify(bankResponse));
+                        const bankList = bankResponse.result || [];
+                    
+                    if (bankList.length === 0) {
+                        console.log(`[富民系统小助手] 批量扣款 - 未找到银行卡`);
+                        results.push({
+                            '客户姓名': caseItem.userRealName || '-',
+                            '案件ID': caseItem.id,
+                            '扣款状态': '失败',
+                            '失败原因': '未找到银行卡',
+                            '用户ID': caseItem.userId
+                        });
+                        failCount++;
+                        continue;
+                    }
+                } catch (bankError) {
+                    console.error(`[富民系统小助手] 批量扣款 - 查询银行卡失败:`, bankError);
                     results.push({
                         '客户姓名': caseItem.userRealName || '-',
                         '案件ID': caseItem.id,
                         '扣款状态': '失败',
-                        '失败原因': '未找到银行卡',
+                        '失败原因': '查询银行卡失败：' + bankError.message,
                         '用户ID': caseItem.userId
                     });
                     failCount++;
