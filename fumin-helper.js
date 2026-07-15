@@ -966,17 +966,9 @@ async function batchAddDunRecord() {
 
         // 第一步：获取案件列表
         console.log('[富民系统小助手] 批量添加催记 - 开始获取案件列表');
-        const caseResponse = await fmRequest(`${BASE_URL}/cs2/user/edge/case/pagingCase`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'token': TOKEN,
-                'appid': '3'
-            },
-            body: JSON.stringify({
-                pageSize: 100,
-                pageNum: 1
-            })
+        const caseResponse = await fmRequest('/cs2/user/edge/case/pagingCase', {
+            pageSize: 100,
+            pageNum: 1
         });
 
         const caseData = JSON.parse(caseResponse);
@@ -1009,18 +1001,10 @@ async function batchAddDunRecord() {
                 console.log(`[富民系统小助手] 批量添加催记 - 处理案件 ${caseId} 用户 ${userId}`);
 
                 // 查询联系人列表
-                const contactResponse = await fmRequest(`${BASE_URL}/cs2/user/contact/queryContactList`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'token': TOKEN,
-                        'appid': '3'
-                    },
-                    body: JSON.stringify({
-                        caseId: caseId,
-                        assetId: ASSET_ID,
-                        userId: userId
-                    })
+                const contactResponse = await fmRequest('/cs2/user/contact/queryContactList', {
+                    caseId: caseId,
+                    assetId: ASSET_ID,
+                    userId: userId
                 });
 
                 const contactData = JSON.parse(contactResponse);
@@ -1046,25 +1030,17 @@ async function batchAddDunRecord() {
                 console.log('[富民系统小助手] 批量添加催记 - 使用联系人:', selfContact.realName, selfContact.relation);
 
                 // 调用添加催记接口
-                const dunResponse = await fmRequest(`${BASE_URL}/cs2/user/edge/dunRecord/add`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'token': TOKEN,
-                        'appid': '3'
-                    },
-                    body: JSON.stringify({
-                        caseId: caseId,
-                        encryptCallNumber: selfContact.encryptMobile,
-                        callStatus: 8,
-                        body: dunContent,
-                        isMultiCall: false,
-                        source: 2,
-                        needCollection: 0,
-                        signId: null,
-                        contactsName: selfContact.realName,
-                        contactsRelation: selfContact.relation
-                    })
+                const dunResponse = await fmRequest('/cs2/user/edge/dunRecord/add', {
+                    caseId: caseId,
+                    encryptCallNumber: selfContact.encryptMobile,
+                    callStatus: 8,
+                    body: dunContent,
+                    isMultiCall: false,
+                    source: 2,
+                    needCollection: 0,
+                    signId: null,
+                    contactsName: selfContact.realName,
+                    contactsRelation: selfContact.relation
                 });
 
                 const dunData = JSON.parse(dunResponse);
