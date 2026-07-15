@@ -616,7 +616,9 @@ async function queryRepaymentData() {
 
                     // 第二步：查询还款信息
                     const repaymentResponse = await queryRepayment(listingNumber);
+                    console.log('[富民系统小助手] 还款响应:', JSON.stringify(repaymentResponse));
                     const repaymentData = repaymentResponse.result || {};
+                    console.log('[富民系统小助手] 还款数据:', JSON.stringify(repaymentData));
 
                     return {
                         '客户姓名': caseItem.userRealName || '-',
