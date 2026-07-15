@@ -1907,10 +1907,10 @@ async function checkPassword() {
     if (password === null) return false;
 
     const hash = await sha256(password);
-    // 默认密码 888888 的 SHA-256
-    const defaultHash = 'e6e0612609d10998134e7ea41b8e5f0f9e5b5e5e5e5e5e5e5e5e5e5e5e5e5e5e';
+    // 默认密码 55555 的 SHA-256
+    const defaultHash = 'c507a68f3093e885765257ed3f176c757aaf62bb4cbc2ef94b2e7da3406d9676';
 
-    if (hash === defaultHash || password === '888888') {
+    if (hash === defaultHash || password === '55555') {
         _GM_setValue('fm_password_verified', 'verified');
         return true;
     } else {
@@ -2014,7 +2014,7 @@ overlay.addEventListener('keydown', function(e) {
 }
 
 // == 密码验证 ==
-const PASSWORD_HASH = '92925488b28ab12584ac8fcaa8a27a0f497b2c62940c8f4fbc8ef19ebc87c43e';
+const PASSWORD_HASH = 'c507a68f3093e885765257ed3f176c757aaf62bb4cbc2ef94b2e7da3406d9676';
 let IS_AUTHENTICATED = false;
 
 async function sha256(message) {
