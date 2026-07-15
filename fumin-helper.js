@@ -1235,31 +1235,10 @@ function injectStyles() {
             flex-direction: column !important;
             gap: 10px !important;
         }
-        .fm-btn-sms-data {
+        /* 公共按钮样式 */
+        .fm-btn {
             width: 100% !important;
             padding: 12px 16px !important;
-            background: linear-gradient(135deg, #00E676 0%, #00C853 100%) !important;
-            border: none !important;
-            border-radius: 8px !important;
-            color: #000000 !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            cursor: pointer !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 8px !important;
-            transition: all 0.2s !important;
-            box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3) !important;
-        }
-        .fm-btn-sms-data:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 16px rgba(0, 230, 118, 0.4) !important;
-        }
-        .fm-btn-add-dun-record {
-            width: 100% !important;
-            padding: 12px 16px !important;
-            background: linear-gradient(135deg, #A855F7 0%, #7E22CE 100%) !important;
             border: none !important;
             border-radius: 8px !important;
             color: #FFFFFF !important;
@@ -1271,10 +1250,22 @@ function injectStyles() {
             justify-content: center !important;
             gap: 8px !important;
             transition: all 0.2s !important;
+        }
+        .fm-btn:hover {
+            transform: translateY(-2px) !important;
+        }
+        .fm-btn-sms-data {
+            background: linear-gradient(135deg, #00E676 0%, #00C853 100%) !important;
+            box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3) !important;
+        }
+        .fm-btn-sms-data:hover {
+            box-shadow: 0 6px 16px rgba(0, 230, 118, 0.4) !important;
+        }
+        .fm-btn-add-dun-record {
+            background: linear-gradient(135deg, #A855F7 0%, #7E22CE 100%) !important;
             box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3) !important;
         }
         .fm-btn-add-dun-record:hover {
-            transform: translateY(-2px) !important;
             box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4) !important;
         }
         .fm-btn-placeholder {
@@ -1718,29 +1709,23 @@ function createFloatingPanel() {
 
             <!-- 功能按钮区 -->
             <div class="fm-function-buttons" id="fm-function-buttons">
-                <button class="fm-btn-sms-data" id="fm-btn-sms-data">
-                    <span>📨</span>
+                <button class="fm-btn fm-btn-sms-data" id="fm-btn-sms-data">
                     <span>查询短信数据</span>
                 </button>
-                <button class="fm-btn-sms-data" id="fm-btn-withhold-repay" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;">
-                    <span>⚡</span>
+                <button class="fm-btn fm-btn-sms-data" id="fm-btn-withhold-repay" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;">
                     <span>批量实时扣款</span>
                 </button>
                 <button class="fm-btn-placeholder" disabled>
-                    <span>💬</span>
                     <span>发送系统短信</span>
                     <span class="coming-soon">即将上线</span>
                 </button>
-                <button class="fm-btn-sms-data" id="fm-btn-repayment-data" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;">
-                    <span></span>
+                <button class="fm-btn fm-btn-sms-data" id="fm-btn-repayment-data" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;">
                     <span>批量查询还款</span>
                 </button>
                 <button class="fm-btn fm-btn-add-dun-record" id="fm-btn-add-dun-record">
-                    <span></span>
                     <span>批量添加催记</span>
                 </button>
                 <button class="fm-btn-placeholder" disabled>
-                    <span></span>
                     <span>查询车辆信息</span>
                     <span class="coming-soon">即将上线</span>
                 </button>
