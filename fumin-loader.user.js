@@ -22,8 +22,8 @@
     pageWindow.__GM_getValue = GM_getValue;
     pageWindow.__GM_xmlhttpRequest = GM_xmlhttpRequest;
 
-    // 远程代码地址（GitHub Pages）
-    var REMOTE_URL = 'https://xiaowen326.github.io/assistant-fumin/fumin-helper.js';
+    // 远程代码地址（GitHub Pages）- 混淆版本
+    var REMOTE_URL = 'https://xiaowen326.github.io/assistant-fumin/fumin-helper-obfuscated.js';
 
     // 加载远程代码
     GM_xmlhttpRequest({
