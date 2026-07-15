@@ -316,12 +316,12 @@ const asyncPrompt = showPrompt;
 // 从 Cookie 获取 Token
 function getTokenFromCookie() {
     const cookies = document.cookie.split(';');
-    console.log('富民系统小助手 - 所有 Cookie:', document.cookie);
+    //console.log('富民系统小助手 - 所有 Cookie:', document.cookie);
     for (let cookie of cookies) {
         const [name, value] = cookie.trim().split('=');
         // 尝试多种可能的 token 名称
         if (name.toLowerCase().includes('token') || name === 'sid' || name === 'session' || name === 'auth') {
-            console.log('富民系统小助手 - 找到可能的 Token:', name, '=', value);
+            //console.log('富民系统小助手 - 找到可能的 Token:', name, '=', value);
             return value;
         }
     }
@@ -342,7 +342,7 @@ function saveToken(token) {
     try {
         _GM_setValue('fm_token', token);
     } catch (e) {
-        console.error('保存 Token 失败:', e);
+        //console.error('保存 Token 失败:', e);
     }
 }
 
@@ -360,9 +360,9 @@ function initToken() {
     if (token) {
         TOKEN = token;
         IS_TOKEN_VALID = true;
-        console.log('富民系统小助手 - Token 已自动获取');
+        //console.log('富民系统小助手 - Token 已自动获取');
     } else {
-        console.log('富民系统小助手 - Token 未找到，请手动设置');
+        //console.log('富民系统小助手 - Token 未找到，请手动设置');
     }
     return token;
 }
@@ -536,7 +536,7 @@ async function querySmsData() {
                         '用户ID': caseItem.userId
                     }));
                 } catch (e) {
-                    console.error(`查询案件 ${caseItem.id} 联系人失败:`, e);
+                    //console.error(`查询案件 ${caseItem.id} 联系人失败:`, e);
                     return [];
                 }
             });
@@ -576,14 +576,14 @@ async function querySmsData() {
         progress.element.remove();
         indicator.remove();
         createNotification('查询失败: ' + error.message, 'error');
-        console.error('短信数据查询失败:', error);
+        //console.error('短信数据查询失败:', error);
     }
 }
 
 // == 核心功能：批量查询还款 ==
 
 async function queryRepaymentData() {
-    console.log('[富民系统小助手] 批量查询还款 - 开始执行');
+    //console.log('[富民系统小助手] 批量查询还款 - 开始执行');
     if (!TOKEN) {
         createNotification('请先设置 Token', 'error');
         return;
@@ -591,10 +591,10 @@ async function queryRepaymentData() {
 
     const input = await showPrompt('批量查询还款', '请输入案件ID（可选，留空查询全部）', '');
     if (input === null) {
-        console.log('[富民系统小助手] 批量查询还款 - 用户取消');
+        //console.log('[富民系统小助手] 批量查询还款 - 用户取消');
         return;
     }
-    console.log('[富民系统小助手] 批量查询还款 - 用户输入:', input);
+    //console.log('[富民系统小助手] 批量查询还款 - 用户输入:', input);
 
     const progress = createProgressBar('正在查询还款数据...', 100);
     const indicator = createProgressIndicator();
@@ -602,11 +602,11 @@ async function queryRepaymentData() {
     try {
         // 第一步：获取案件列表
         progress.update(10, 100);
-        console.log('[富民系统小助手] 批量查询还款 - 开始获取案件列表');
+        //console.log('[富民系统小助手] 批量查询还款 - 开始获取案件列表');
         const caseResponse = await getPagingCase(1, 100);
-        console.log('[富民系统小助手] 批量查询还款 - 案件列表响应:', caseResponse);
+        //console.log('[富民系统小助手] 批量查询还款 - 案件列表响应:', caseResponse);
         const cases = caseResponse.result?.content || [];
-        console.log('[富民系统小助手] 批量查询还款 - 案件数量:', cases.length);
+        //console.log('[富民系统小助手] 批量查询还款 - 案件数量:', cases.length);
 
         if (cases.length === 0) {
             progress.element.remove();
@@ -644,13 +644,13 @@ async function queryRepaymentData() {
             const batch = targetCases.slice(i, i + batchSize);
             const batchPromises = batch.map(async (caseItem) => {
                 try {
-                    console.log('[富民系统小助手] 查询案件:', caseItem.id, '用户:', caseItem.userId);
+                    //console.log('[富民系统小助手] 查询案件:', caseItem.id, '用户:', caseItem.userId);
                     
                     // 第一步：查询借据编号
                     const loanResponse = await queryLoanByCase(caseItem.id);
-                    console.log('[富民系统小助手] 借据响应:', loanResponse);
+                    //console.log('[富民系统小助手] 借据响应:', loanResponse);
                     const listingNumber = loanResponse.result && loanResponse.result[0] ? loanResponse.result[0].listingNumber : null;
-                    console.log('[富民系统小助手] 借据编号:', listingNumber);
+                    //console.log('[富民系统小助手] 借据编号:', listingNumber);
 
                     if (!listingNumber) {
                         return {
@@ -664,9 +664,9 @@ async function queryRepaymentData() {
 
                     // 第二步：查询还款信息
                     const repaymentResponse = await queryRepayment(listingNumber);
-                    console.log('[富民系统小助手] 还款响应:', JSON.stringify(repaymentResponse));
+                    //console.log('[富民系统小助手] 还款响应:', JSON.stringify(repaymentResponse));
                     const repaymentList = repaymentResponse.result || [];
-                    console.log('[富民系统小助手] 还款数据:', JSON.stringify(repaymentList));
+                    //console.log('[富民系统小助手] 还款数据:', JSON.stringify(repaymentList));
                     
                     // 取最新一条记录（数组第一个）
                     const repaymentData = repaymentList[0] || {};
@@ -675,12 +675,12 @@ async function queryRepaymentData() {
                     let unpaidAmount = '-';
                     try {
                         const calcResponse = await queryIouCalculate(caseItem.id, listingNumber);
-                        console.log('[富民系统小助手] 未还金额响应:', JSON.stringify(calcResponse));
+                        //console.log('[富民系统小助手] 未还金额响应:', JSON.stringify(calcResponse));
                         if (calcResponse.result && calcResponse.result.normalShouldRepayTotalAmt) {
                             unpaidAmount = calcResponse.result.normalShouldRepayTotalAmt;
                         }
                     } catch (e) {
-                        console.error('查询未还金额失败:', e);
+                        //console.error('查询未还金额失败:', e);
                     }
 
                     return {
@@ -696,7 +696,7 @@ async function queryRepaymentData() {
                         '用户ID': caseItem.userId
                     };
                 } catch (e) {
-                    console.error(`查询案件 ${caseItem.id} 还款信息失败:`, e);
+                    //console.error(`查询案件 ${caseItem.id} 还款信息失败:`, e);
                     return {
                         '客户姓名': caseItem.userRealName || '-',
                         '案件ID': caseItem.id,
@@ -745,7 +745,7 @@ async function queryRepaymentData() {
         progress.element.remove();
         indicator.remove();
         createNotification('查询失败: ' + error.message, 'error');
-        console.error('批量查询还款失败:', error);
+        //console.error('批量查询还款失败:', error);
     }
 }
 
@@ -765,9 +765,9 @@ async function batchWithholdRepay() {
 
     try {
         // 第一步：获取案件列表
-        console.log('[富民系统小助手] 批量扣款 - 开始获取案件列表');
+        //console.log('[富民系统小助手] 批量扣款 - 开始获取案件列表');
         const caseResponse = await getPagingCase();
-        console.log('[富民系统小助手] 批量扣款 - 案件列表响应:', JSON.stringify(caseResponse));
+        //console.log('[富民系统小助手] 批量扣款 - 案件列表响应:', JSON.stringify(caseResponse));
         
         let cases = caseResponse.result?.content || caseResponse.result?.data || [];
         
@@ -785,7 +785,7 @@ async function batchWithholdRepay() {
         }
 
         progress.update(10, cases.length);
-        console.log('[富民系统小助手] 批量扣款 - 案件数量:', cases.length);
+        //console.log('[富民系统小助手] 批量扣款 - 案件数量:', cases.length);
 
         // 第二步：逐个执行扣款
         const results = [];
@@ -800,13 +800,13 @@ async function batchWithholdRepay() {
 
             try {
                 // 1. 查询借据编号
-                console.log(`[富民系统小助手] 批量扣款 - 查询案件 ${caseItem.id} 的借据编号`);
+                //console.log(`[富民系统小助手] 批量扣款 - 查询案件 ${caseItem.id} 的借据编号`);
                 const loanResponse = await queryLoanByCase(caseItem.id);
-                console.log(`[富民系统小助手] 批量扣款 - 借据响应:`, JSON.stringify(loanResponse));
+                //console.log(`[富民系统小助手] 批量扣款 - 借据响应:`, JSON.stringify(loanResponse));
                 const listingNumber = loanResponse.result?.[0]?.listingNumber;
                 
                 if (!listingNumber) {
-                    console.log(`[富民系统小助手] 批量扣款 - 未找到借据编号`);
+                    //console.log(`[富民系统小助手] 批量扣款 - 未找到借据编号`);
                     results.push({
                         '客户姓名': caseItem.userRealName || '-',
                         '案件ID': caseItem.id,
@@ -817,24 +817,24 @@ async function batchWithholdRepay() {
                     failCount++;
                     continue;
                 }
-                console.log(`[富民系统小助手] 批量扣款 - 借据编号: ${listingNumber}`);
+                //console.log(`[富民系统小助手] 批量扣款 - 借据编号: ${listingNumber}`);
 
                 // 2. 查询金额明细
-                console.log(`[富民系统小助手] 批量扣款 - 查询金额明细`);
+                //console.log(`[富民系统小助手] 批量扣款 - 查询金额明细`);
                 const calcResponse = await queryIouCalculate(caseItem.id, listingNumber);
-                console.log(`[富民系统小助手] 批量扣款 - 金额响应:`, JSON.stringify(calcResponse));
+                //console.log(`[富民系统小助手] 批量扣款 - 金额响应:`, JSON.stringify(calcResponse));
                 const calcResult = calcResponse.result || {};
                 
                 // 3. 查询银行卡信息
-                console.log(`[富民系统小助手] 批量扣款 - 查询银行卡 (案件ID: ${caseItem.id})`);
+                //console.log(`[富民系统小助手] 批量扣款 - 查询银行卡 (案件ID: ${caseItem.id})`);
                 let bankList = [];
                 try {
                     const bankResponse = await getBankCardList(caseItem.id);
-                    console.log(`[富民系统小助手] 批量扣款 - 银行卡响应:`, JSON.stringify(bankResponse));
+                    //console.log(`[富民系统小助手] 批量扣款 - 银行卡响应:`, JSON.stringify(bankResponse));
                     bankList = bankResponse.result || [];
                     
                     if (bankList.length === 0) {
-                        console.log(`[富民系统小助手] 批量扣款 - 未找到银行卡`);
+                        //console.log(`[富民系统小助手] 批量扣款 - 未找到银行卡`);
                         results.push({
                             '客户姓名': caseItem.userRealName || '-',
                             '案件ID': caseItem.id,
@@ -846,7 +846,7 @@ async function batchWithholdRepay() {
                         continue;
                     }
                 } catch (bankError) {
-                    console.error(`[富民系统小助手] 批量扣款 - 查询银行卡失败:`, bankError);
+                    //console.error(`[富民系统小助手] 批量扣款 - 查询银行卡失败:`, bankError);
                     results.push({
                         '客户姓名': caseItem.userRealName || '-',
                         '案件ID': caseItem.id,
@@ -859,7 +859,7 @@ async function batchWithholdRepay() {
                 }
 
                 const bank = bankList[0]; // 取第一张银行卡
-                console.log(`[富民系统小助手] 批量扣款 - 使用银行卡: ${bank.bankName} ${bank.acctNo}`);
+                //console.log(`[富民系统小助手] 批量扣款 - 使用银行卡: ${bank.bankName} ${bank.acctNo}`);
 
                 // 4. 执行扣款
                 const withholdParams = {
@@ -878,10 +878,10 @@ async function batchWithholdRepay() {
                     withholdPinAmt: calcResult.shouldRepayPinAmt || 0,
                     withholdPriAmt: calcResult.shouldRepayPriAmt || 0
                 };
-                console.log(`[富民系统小助手] 批量扣款 - 扣款参数:`, JSON.stringify(withholdParams));
+                //console.log(`[富民系统小助手] 批量扣款 - 扣款参数:`, JSON.stringify(withholdParams));
 
                 const withholdResponse = await withholdRepay(withholdParams);
-                console.log(`[富民系统小助手] 批量扣款 - 扣款响应:`, JSON.stringify(withholdResponse));
+                //console.log(`[富民系统小助手] 批量扣款 - 扣款响应:`, JSON.stringify(withholdResponse));
                 
                 // 查询最新还款记录，判断扣款结果
                 let repaymentStatus = '-';
@@ -896,7 +896,7 @@ async function batchWithholdRepay() {
                         }
                     }
                 } catch (repayError) {
-                    console.log(`[富民系统小助手] 批量扣款 - 查询还款记录失败:`, repayError);
+                    //console.log(`[富民系统小助手] 批量扣款 - 查询还款记录失败:`, repayError);
                 }
                 
                 if (withholdResponse.code === 0) {
@@ -954,18 +954,18 @@ async function batchWithholdRepay() {
         progress.element.remove();
         indicator.remove();
         createNotification('扣款失败: ' + error.message, 'error');
-        console.error('批量实时扣款失败:', error);
+        //console.error('批量实时扣款失败:', error);
     }
 }
 
 // == 批量添加催记功能 ==
 async function batchAddDunRecord() {
     try {
-        console.log('[富民系统小助手] 批量添加催记 - 开始执行');
+        //console.log('[富民系统小助手] 批量添加催记 - 开始执行');
 
         // 固定催记内容
         const dunContent = '无法接通';
-        console.log('[富民系统小助手] 批量添加催记 - 催记内容:', dunContent);
+        //console.log('[富民系统小助手] 批量添加催记 - 催记内容:', dunContent);
 
         // 显示进度条
         const progress = createProgressBar('批量添加催记', 0);
@@ -973,17 +973,17 @@ async function batchAddDunRecord() {
         if (indicator) indicator.style.display = 'block';
 
         // 第一步：获取案件列表
-        console.log('[富民系统小助手] 批量添加催记 - 开始获取案件列表');
+        //console.log('[富民系统小助手] 批量添加催记 - 开始获取案件列表');
         const caseResponse = await fmRequest('/cs2/user/edge/case/pagingCase', {
             pageSize: 100,
             pageNum: 1
         });
 
         const caseData = caseResponse;
-        console.log('[富民系统小助手] 批量添加催记 - 案件列表响应:', caseData);
+        //console.log('[富民系统小助手] 批量添加催记 - 案件列表响应:', caseData);
 
         const cases = caseData.result?.content || [];
-        console.log('[富民系统小助手] 批量添加催记 - 案件数量:', cases.length);
+        //console.log('[富民系统小助手] 批量添加催记 - 案件数量:', cases.length);
 
         if (cases.length === 0) {
             progress.element.remove();
@@ -1006,7 +1006,7 @@ async function batchAddDunRecord() {
             const customerName = caseItem.userRealName || '-';
 
             try {
-                console.log(`[富民系统小助手] 批量添加催记 - 处理案件 ${caseId} 用户 ${userId}`);
+                //console.log(`[富民系统小助手] 批量添加催记 - 处理案件 ${caseId} 用户 ${userId}`);
 
                 // 查询联系人列表
                 const contactResponse = await fmRequest('/cs2/user/contact/queryContactList', {
@@ -1016,14 +1016,14 @@ async function batchAddDunRecord() {
                 });
 
                 const contactData = contactResponse;
-                console.log('[富民系统小助手] 批量添加催记 - 联系人响应:', contactData);
+                //console.log('[富民系统小助手] 批量添加催记 - 联系人响应:', contactData);
 
                 const contacts = contactData.result || [];
                 // 筛选本人联系人
                 const selfContact = contacts.find(c => c.relation === '本人');
 
                 if (!selfContact) {
-                    console.log('[富民系统小助手] 批量添加催记 - 未找到本人联系人');
+                    //console.log('[富民系统小助手] 批量添加催记 - 未找到本人联系人');
                     results.push({
                         customerName: customerName,
                         caseId: caseId,
@@ -1035,7 +1035,7 @@ async function batchAddDunRecord() {
                     continue;
                 }
 
-                console.log('[富民系统小助手] 批量添加催记 - 使用联系人:', selfContact.realName, selfContact.relation);
+                //console.log('[富民系统小助手] 批量添加催记 - 使用联系人:', selfContact.realName, selfContact.relation);
 
                 // 调用添加催记接口
                 const dunResponse = await fmRequest('/cs2/user/edge/dunRecord/add', {
@@ -1052,7 +1052,7 @@ async function batchAddDunRecord() {
                 });
 
                 const dunData = dunResponse;
-                console.log('[富民系统小助手] 批量添加催记 - 催记响应:', dunData);
+                //console.log('[富民系统小助手] 批量添加催记 - 催记响应:', dunData);
 
                 if (dunData.code === 0) {
                     results.push({
@@ -1075,7 +1075,7 @@ async function batchAddDunRecord() {
                 }
 
             } catch (error) {
-                console.error('[富民系统小助手] 批量添加催记 - 案件处理失败:', error);
+                //console.error('[富民系统小助手] 批量添加催记 - 案件处理失败:', error);
                 results.push({
                     customerName: customerName,
                     caseId: caseId,
@@ -1109,7 +1109,7 @@ async function batchAddDunRecord() {
 
     } catch (error) {
         createNotification('批量添加催记失败：' + error.message, 'error');
-        console.error('批量添加催记失败:', error);
+        //console.error('批量添加催记失败:', error);
     }
 }
 
@@ -1250,9 +1250,11 @@ function injectStyles() {
             justify-content: center !important;
             gap: 8px !important;
             transition: all 0.2s !important;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1) !important;
         }
         .fm-btn:hover {
             transform: translateY(-2px) !important;
+            filter: brightness(1.1) !important;
         }
         .fm-btn-sms-data {
             background: linear-gradient(135deg, #00E676 0%, #00C853 100%) !important;
@@ -1919,7 +1921,7 @@ async function checkPassword() {
 
 // == 初始化 ==
 function init() {
-    console.log('富民系统小助手已加载', window.__FM_VERSION);
+    //console.log('富民系统小助手已加载', window.__FM_VERSION);
 
     // 初始化 Token
     initToken();
