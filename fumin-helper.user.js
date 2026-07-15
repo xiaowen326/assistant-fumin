@@ -1106,6 +1106,13 @@
                 progress.update(i + 1, cases.length);
             }
 
+            // 完成进度条
+            progress.complete();
+            setTimeout(() => {
+                progress.element.remove();
+                if (indicator) indicator.remove();
+            }, 2000);
+
             // 显示结果
             displayResults(results, [
                 { key: 'customerName', label: '客户姓名' },
@@ -1790,9 +1797,10 @@
             if (!isDragging) return;
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
-            panel.style.left = `${initialX + dx}px`;
-            panel.style.top = `${initialY + dy}px`;
-            panel.style.right = 'auto';
+            // 使用 setProperty 覆盖 !important
+            panel.style.setProperty('left', `${initialX + dx}px`, 'important');
+            panel.style.setProperty('top', `${initialY + dy}px`, 'important');
+            panel.style.setProperty('right', 'auto', 'important');
         });
 
         document.addEventListener('mouseup', () => {
