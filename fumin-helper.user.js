@@ -618,7 +618,7 @@
                         // 第一步：查询借据编号
                         const loanResponse = await queryLoanByCase(caseItem.id);
                         console.log('[富民系统小助手] 借据响应:', loanResponse);
-                        const listingNumber = loanResponse.result?.listingNumber;
+                        const listingNumber = loanResponse.result && loanResponse.result[0] ? loanResponse.result[0].listingNumber : null;
                         console.log('[富民系统小助手] 借据编号:', listingNumber);
 
                         if (!listingNumber) {
