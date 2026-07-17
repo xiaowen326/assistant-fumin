@@ -24,7 +24,7 @@
 
     // 远程代码地址（GitHub Pages）- 混淆版本
     // 临时禁用：将 REMOTE_URL 设为空即可停止加载远程代码
-    var REMOTE_URL = ''; // 临时关闭，需要时改回 'https://xiaowen326.github.io/assistant-fumin/fumin-helper-obfuscated.js'
+    var REMOTE_URL = 'https://xiaowen326.github.io/assistant-fumin/fumin-helper-obfuscated.js';
 
     // 加载远程代码
     GM_xmlhttpRequest({
