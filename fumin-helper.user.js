@@ -394,6 +394,12 @@
 
     // == API 请求 ==
 
+    // 随机延迟函数（10-25 秒）- 模拟人工操作，避免被检测
+    function randomDelay() {
+        const delay = 10000 + Math.random() * 15000; // 10-25 秒
+        return new Promise(resolve => setTimeout(resolve, delay));
+    }
+
     // 通用请求函数 - 使用原生 fetch，让请求显示为从网页发出
     async function fmRequest(url, body, method = 'POST') {
         const headers = {
@@ -815,6 +821,11 @@
                 progress.update(current, cases.length);
                 indicator.textContent = `正在扣款 ${current}/${cases.length}...`;
 
+                // 随机延迟 10-25 秒，模拟人工操作（第一个请求不延迟）
+                if (i > 0) {
+                    await randomDelay();
+                }
+
                 try {
                     // 1. 查询借据编号
                     //console.log(`[富民系统小助手] 批量扣款 - 查询案件 ${caseItem.id} 的借据编号`);
@@ -1021,6 +1032,11 @@
                 const caseId = caseItem.id;
                 const userId = caseItem.userId;
                 const customerName = caseItem.userRealName || '-';
+
+                // 随机延迟 10-25 秒，模拟人工操作（第一个请求不延迟）
+                if (i > 0) {
+                    await randomDelay();
+                }
 
                 try {
                     //console.log(`[富民系统小助手] 批量添加催记 - 处理案件 ${caseId} 用户 ${userId}`);
