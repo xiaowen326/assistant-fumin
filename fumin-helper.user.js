@@ -394,38 +394,38 @@
 
     // == API 请求 ==
 
-    // 通用请求函数
-    function fmRequest(url, body, method = 'POST') {
-        return new Promise((resolve, reject) => {
-            const headers = {
-                'accept': 'application/json, text/plain, */*',
-                'content-type': 'application/json; charset=UTF-8',
-                'appid': '3',
-                'token': TOKEN
-            };
+    // 通用请求函数 - 使用原生 fetch，让请求显示为从网页发出
+    async function fmRequest(url, body, method = 'POST') {
+        const headers = {
+            'accept': 'application/json, text/plain, */*',
+            'content-type': 'application/json; charset=UTF-8',
+            'appid': '3',
+            'token': TOKEN
+        };
 
-            _GM_xmlhttpRequest({
-                method: method,
-                url: BASE_URL + url,
-                headers: headers,
-                data: body ? JSON.stringify(body) : undefined,
-                onload: function(response) {
-                    try {
-                        const data = JSON.parse(response.responseText);
-                        if (data.code === 0 || data.message === 'SUCCESS') {
-                            resolve(data);
-                        } else {
-                            reject(new Error(data.message || '请求失败'));
-                        }
-                    } catch (e) {
-                        reject(new Error('解析响应失败'));
-                    }
-                },
-                onerror: function(error) {
-                    reject(new Error('网络请求失败'));
-                }
-            });
-        });
+        const options = {
+            method: method,
+            headers: headers,
+            credentials: 'include', // 携带 Cookie
+            mode: 'cors'
+        };
+
+        if (body && method !== 'GET') {
+            options.body = JSON.stringify(body);
+        }
+
+        try {
+            const response = await fetch(BASE_URL + url, options);
+            const data = await response.json();
+            
+            if (data.code === 0 || data.message === 'SUCCESS') {
+                return data;
+            } else {
+                throw new Error(data.message || '请求失败');
+            }
+        } catch (e) {
+            throw new Error('网络请求失败');
+        }
     }
 
     // 获取案件列表（分页）
