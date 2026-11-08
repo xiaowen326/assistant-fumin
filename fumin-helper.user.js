@@ -18,6 +18,14 @@
     // == 版本标记 ==
     window.__FM_VERSION = 'v20260714C';
 
+    // == 引入 CryptoJS（如果页面未加载）==
+    if (typeof CryptoJS === 'undefined') {
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js';
+        script.async = false;
+        document.head.appendChild(script);
+    }
+
     // == GM API 兼容层（支持 Tampermonkey 和 控制台直接运行）==
     // 使用 _GM_ 前缀避免与 Tampermonkey 注入的全局变量冲突
     var _GM_setValue = (typeof _GM_setValue !== 'undefined') ? _GM_setValue : function(key, value) {
@@ -405,6 +413,33 @@
 
     // == API 请求 ==
 
+    // == 加密函数 ==
+    // 生成 AES key 和 iv（使用 login-Token 作为密钥）
+    function generateKeyIv(token) {
+        if (typeof CryptoJS === 'undefined') {
+            throw new Error('CryptoJS 未加载');
+        }
+        const t = CryptoJS.SHA256(token);
+        const n = CryptoJS.enc.Utf8.parse(token);
+        const key = CryptoJS.lib.WordArray.create(t.words.slice(0, 4));
+        const iv = CryptoJS.lib.WordArray.create(n.words.slice(0, 4));
+        return { key, iv };
+    }
+
+    // AES 加密（CBC 模式 + Pkcs7 填充）
+    function encryptData(data, token) {
+        if (typeof CryptoJS === 'undefined') {
+            throw new Error('CryptoJS 未加载');
+        }
+        const { key, iv } = generateKeyIv(token);
+        const encrypted = CryptoJS.AES.encrypt(data, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        });
+        return encrypted.toString();
+    }
+
     // 随机延迟函数（10-25 秒）- 模拟人工操作，避免被检测
     function randomDelay() {
         const delay = 10000 + Math.random() * 15000; // 10-25 秒
@@ -437,7 +472,14 @@
         };
 
         if (body && method !== 'GET') {
-            options.body = JSON.stringify(body);
+            // 加密请求 body（使用 login-Token 作为密钥）
+            try {
+                const jsonBody = JSON.stringify(body);
+                const encryptedBody = encryptData(jsonBody, TOKEN);
+                options.body = encryptedBody;
+            } catch (e) {
+                throw new Error('请求加密失败: ' + e.message);
+            }
         }
 
         try {

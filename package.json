@@ -1,5 +1,8 @@
 {
 	"devDependencies": {
 		"javascript-obfuscator": "^5.4.7"
+	},
+	"dependencies": {
+		"crypto-js": "^4.2.0"
 	}
 }
