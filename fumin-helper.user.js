@@ -443,6 +443,20 @@
         return encrypted.toString();
     }
 
+    // AES 解密（CBC 模式 + Pkcs7 填充）
+    function decryptData(encryptedData, token) {
+        if (typeof CryptoJS === 'undefined') {
+            throw new Error('CryptoJS 未加载');
+        }
+        const { key, iv } = generateKeyIv(token);
+        const decrypted = CryptoJS.AES.decrypt(encryptedData, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        });
+        return decrypted.toString(CryptoJS.enc.Utf8);
+    }
+
     // 随机延迟函数（10-25 秒）- 模拟人工操作，避免被检测
     function randomDelay() {
         const delay = 10000 + Math.random() * 15000; // 10-25 秒
@@ -489,7 +503,26 @@
 
         try {
             const response = await fetch(BASE_URL + url, options);
-            const data = await response.json();
+            const responseText = await response.text();
+            
+            // 调试信息：显示原始响应
+            //console.log('富民系统小助手 - 原始响应:', url, responseText);
+            
+            // 尝试解密响应（如果响应是加密的）
+            let decryptedText = responseText;
+            try {
+                // 检查是否是 Base64 编码的加密数据（通常以 / 或 + 结尾，且长度是 4 的倍数）
+                if (responseText.length > 16 && /^[A-Za-z0-9+/]+={0,2}$/.test(responseText)) {
+                    decryptedText = decryptData(responseText, TOKEN);
+                    //console.log('富民系统小助手 - 解密后响应:', url, decryptedText);
+                }
+            } catch (decryptError) {
+                // 解密失败，说明响应可能不是加密的，直接使用原始文本
+                //console.log('富民系统小助手 - 响应解密失败，使用原始响应:', url, decryptError.message);
+            }
+            
+            // 解析 JSON
+            const data = JSON.parse(decryptedText);
             
             // 调试信息：显示 API 返回的完整数据
             //console.log('富民系统小助手 - API 响应:', url, data);
@@ -508,6 +541,8 @@
                 throw e;
             } else if (e instanceof TypeError && e.message.includes('fetch')) {
                 throw new Error('网络请求失败：无法连接到服务器，请检查网络或 CORS 设置');
+            } else if (e instanceof SyntaxError) {
+                throw new Error('响应解析失败：' + e.message + '（可能是加密数据未正确解密）');
             } else {
                 throw new Error('网络请求失败: ' + e.message);
             }
