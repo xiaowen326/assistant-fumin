@@ -444,17 +444,23 @@
             const response = await fetch(BASE_URL + url, options);
             const data = await response.json();
             
+            // 调试信息：显示 API 返回的完整数据
+            //console.log('富民系统小助手 - API 响应:', url, data);
+            
             if (data.code === 0 || data.message === 'SUCCESS') {
                 return data;
             } else {
-                throw new Error(data.message || '请求失败');
+                // 显示具体错误信息
+                const errorMsg = data.message || data.msg || '请求失败';
+                //console.error('富民系统小助手 - API 错误:', url, 'code:', data.code, 'message:', errorMsg);
+                throw new Error(errorMsg + ' (code: ' + data.code + ')');
             }
         } catch (e) {
             // 显示更详细的错误信息
             if (e.message.includes('Token')) {
                 throw e;
             } else if (e instanceof TypeError && e.message.includes('fetch')) {
-                throw new Error('网络请求失败：无法连接到服务器');
+                throw new Error('网络请求失败：无法连接到服务器，请检查网络或 CORS 设置');
             } else {
                 throw new Error('网络请求失败: ' + e.message);
             }
