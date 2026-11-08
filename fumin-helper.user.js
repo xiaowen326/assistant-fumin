@@ -385,9 +385,12 @@
         if (token) {
             TOKEN = token;
             IS_TOKEN_VALID = true;
-            //console.log('富民系统小助手 - Token 已自动获取');
+            //console.log('富民系统小助手 - Token 已自动获取，长度:', token.length);
         } else {
             //console.log('富民系统小助手 - Token 未找到，请手动设置');
+            // 显示当前 Cookie 中的所有键，帮助调试
+            const cookies = document.cookie.split(';').map(c => c.trim().split('=')[0]);
+            //console.log('富民系统小助手 - 当前 Cookie 键:', cookies);
         }
         return token;
     }
@@ -410,6 +413,15 @@
 
     // 通用请求函数 - 使用原生 fetch，让请求显示为从网页发出
     async function fmRequest(url, body, method = 'POST') {
+        // 检查 Token 是否存在
+        if (!TOKEN) {
+            // 尝试重新获取 Token
+            initToken();
+            if (!TOKEN) {
+                throw new Error('Token 未设置，请先在设置中配置 Token');
+            }
+        }
+
         const headers = {
             'accept': 'application/json, text/plain, */*',
             'content-type': 'application/json; charset=UTF-8',
@@ -438,7 +450,14 @@
                 throw new Error(data.message || '请求失败');
             }
         } catch (e) {
-            throw new Error('网络请求失败');
+            // 显示更详细的错误信息
+            if (e.message.includes('Token')) {
+                throw e;
+            } else if (e instanceof TypeError && e.message.includes('fetch')) {
+                throw new Error('网络请求失败：无法连接到服务器');
+            } else {
+                throw new Error('网络请求失败: ' + e.message);
+            }
         }
     }
 
