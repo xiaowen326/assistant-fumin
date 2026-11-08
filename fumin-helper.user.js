@@ -19,11 +19,14 @@
     window.__FM_VERSION = 'v20260714C';
 
     // == 引入 CryptoJS（如果页面未加载）==
+    let CryptoJSLoaded = false;
     if (typeof CryptoJS === 'undefined') {
-        var script = document.createElement('script');
+        const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js';
-        script.async = false;
+        script.onload = () => { CryptoJSLoaded = true; };
         document.head.appendChild(script);
+    } else {
+        CryptoJSLoaded = true;
     }
 
     // == GM API 兼容层（支持 Tampermonkey 和 控制台直接运行）==
@@ -417,11 +420,21 @@
     // == API 请求 ==
 
     // == 加密函数 ==
-    // 生成 AES key 和 iv（使用 login-Token 作为密钥）
-    function generateKeyIv(token) {
-        if (typeof CryptoJS === 'undefined') {
-            throw new Error('CryptoJS 未加载');
+    // 等待 CryptoJS 加载完成
+    async function waitForCryptoJS() {
+        let retries = 0;
+        while (!CryptoJSLoaded && retries < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
         }
+        if (!CryptoJSLoaded) {
+            throw new Error('CryptoJS 加载超时');
+        }
+    }
+
+    // 生成 AES key 和 iv（使用 login-Token 作为密钥）
+    async function generateKeyIv(token) {
+        await waitForCryptoJS();
         const t = CryptoJS.SHA256(token);
         const n = CryptoJS.enc.Utf8.parse(token);
         const key = CryptoJS.lib.WordArray.create(t.words.slice(0, 4));
@@ -430,11 +443,9 @@
     }
 
     // AES 加密（CBC 模式 + Pkcs7 填充）
-    function encryptData(data, token) {
-        if (typeof CryptoJS === 'undefined') {
-            throw new Error('CryptoJS 未加载');
-        }
-        const { key, iv } = generateKeyIv(token);
+    async function encryptData(data, token) {
+        await waitForCryptoJS();
+        const { key, iv } = await generateKeyIv(token);
         const encrypted = CryptoJS.AES.encrypt(data, key, {
             iv: iv,
             mode: CryptoJS.mode.CBC,
@@ -444,11 +455,9 @@
     }
 
     // AES 解密（CBC 模式 + Pkcs7 填充）
-    function decryptData(encryptedData, token) {
-        if (typeof CryptoJS === 'undefined') {
-            throw new Error('CryptoJS 未加载');
-        }
-        const { key, iv } = generateKeyIv(token);
+    async function decryptData(encryptedData, token) {
+        await waitForCryptoJS();
+        const { key, iv } = await generateKeyIv(token);
         const decrypted = CryptoJS.AES.decrypt(encryptedData, key, {
             iv: iv,
             mode: CryptoJS.mode.CBC,
@@ -494,7 +503,7 @@
             // 加密请求 body（使用 login-Token 作为密钥）
             try {
                 const jsonBody = JSON.stringify(body);
-                const encryptedBody = encryptData(jsonBody, TOKEN);
+                const encryptedBody = await encryptData(jsonBody, TOKEN);
                 options.body = encryptedBody;
             } catch (e) {
                 throw new Error('请求加密失败: ' + e.message);
@@ -513,7 +522,7 @@
             try {
                 // 检查是否是 Base64 编码的加密数据（通常以 / 或 + 结尾，且长度是 4 的倍数）
                 if (responseText.length > 16 && /^[A-Za-z0-9+/]+={0,2}$/.test(responseText)) {
-                    decryptedText = decryptData(responseText, TOKEN);
+                    decryptedText = await decryptData(responseText, TOKEN);
                     //console.log('富民系统小助手 - 解密后响应:', url, decryptedText);
                 }
             } catch (decryptError) {
