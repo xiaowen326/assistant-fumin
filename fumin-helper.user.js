@@ -408,7 +408,10 @@
         TOKEN = token;
         IS_TOKEN_VALID = !!token;
         saveToken(token);
-        updateTokenStatus();
+        // 如果 updateTokenStatus 函数存在（在面板创建后），则调用它
+        if (typeof updateTokenStatus === 'function') {
+            updateTokenStatus();
+        }
     }
 
     // == API 请求 ==
@@ -461,7 +464,9 @@
             'accept': 'application/json, text/plain, */*',
             'content-type': 'application/json; charset=UTF-8',
             'appid': '3',
-            'token': TOKEN
+            'token': TOKEN,
+            'pragma': 'no-cache',
+            'ac': '0804efe9fe331591ce459089543693bc' // 从网页请求中获取的认证头
         };
 
         const options = {
