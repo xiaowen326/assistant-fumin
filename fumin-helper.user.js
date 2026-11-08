@@ -336,10 +336,18 @@
         //console.log('富民系统小助手 - 所有 Cookie:', document.cookie);
         for (let cookie of cookies) {
             const [name, value] = cookie.trim().split('=');
-            // 尝试多种可能的 token 名称
+            // 优先匹配 login-Token（富民系统使用）
+            if (name === 'login-Token') {
+                //console.log('富民系统小助手 - 找到 login-Token:', value);
+                return decodeURIComponent(value); // URL 解码
+            }
+        }
+        // 如果没有找到 login-Token，尝试其他可能的 token 名称
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
             if (name.toLowerCase().includes('token') || name === 'sid' || name === 'session' || name === 'auth') {
                 //console.log('富民系统小助手 - 找到可能的 Token:', name, '=', value);
-                return value;
+                return decodeURIComponent(value); // URL 解码
             }
         }
         return null;
