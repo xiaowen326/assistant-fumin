@@ -19,14 +19,12 @@
     window.__FM_VERSION = 'v20260714C';
 
     // == 引入 CryptoJS（如果页面未加载）==
-    let CryptoJSLoaded = false;
+    // 使用同步加载确保 CryptoJS 可用
     if (typeof CryptoJS === 'undefined') {
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js';
-        script.onload = () => { CryptoJSLoaded = true; };
+        script.async = false; // 同步加载，确保在使用前已加载
         document.head.appendChild(script);
-    } else {
-        CryptoJSLoaded = true;
     }
 
     // == GM API 兼容层（支持 Tampermonkey 和 控制台直接运行）==
@@ -420,21 +418,12 @@
     // == API 请求 ==
 
     // == 加密函数 ==
-    // 等待 CryptoJS 加载完成
-    async function waitForCryptoJS() {
-        let retries = 0;
-        while (!CryptoJSLoaded && retries < 50) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            retries++;
-        }
-        if (!CryptoJSLoaded) {
-            throw new Error('CryptoJS 加载超时');
-        }
-    }
-
     // 生成 AES key 和 iv（使用 login-Token 作为密钥）
     async function generateKeyIv(token) {
-        await waitForCryptoJS();
+        // 确保 CryptoJS 已加载
+        if (typeof CryptoJS === 'undefined') {
+            throw new Error('CryptoJS 未加载，请刷新页面重试');
+        }
         const t = CryptoJS.SHA256(token);
         const n = CryptoJS.enc.Utf8.parse(token);
         const key = CryptoJS.lib.WordArray.create(t.words.slice(0, 4));
@@ -444,7 +433,6 @@
 
     // AES 加密（CBC 模式 + Pkcs7 填充）
     async function encryptData(data, token) {
-        await waitForCryptoJS();
         const { key, iv } = await generateKeyIv(token);
         const encrypted = CryptoJS.AES.encrypt(data, key, {
             iv: iv,
@@ -456,7 +444,6 @@
 
     // AES 解密（CBC 模式 + Pkcs7 填充）
     async function decryptData(encryptedData, token) {
-        await waitForCryptoJS();
         const { key, iv } = await generateKeyIv(token);
         const decrypted = CryptoJS.AES.decrypt(encryptedData, key, {
             iv: iv,
